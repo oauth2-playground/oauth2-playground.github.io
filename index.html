@@ -9,7 +9,10 @@
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body class="bg-slate-50 text-slate-700 font-mono min-h-screen flex items-center justify-center p-4">
+
+
 <div class="w-full max-w-6xl mx-auto bg-white border border-slate-200 shadow-lg p-6">
+
     <div class="border-b border-slate-200 pb-4 mb-6">
         <h1 class="text-2xl font-bold text-slate-800 flex items-center">
             <span class="mr-2 text-blue-500"></span>
@@ -31,19 +34,27 @@
 
             <div class="form-content space-y-2 p-5 flex-1 overflow-y-auto">
                 <div>
-                    <label for="baseUrl" class="block text-slate-700 text-sm font-semibold mb-2">Base URL</label>
-                    <input type="url" id="baseUrl"
-                           class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                           placeholder="https://auth.example.com">
+                    <label for="baseUrl" class="block text-slate-700 text-sm font-semibold mb-2">
+                        Base URL
+                    </label>
+                    <div class="flex">
+                        <input type="url" id="baseUrl" class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                               placeholder="https://auth.example.com">
+                        <button id="syncUrls" class="min-w-[5.2rem] bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">
+                            Sync
+                        </button>
+                    </div>
                 </div>
                 <div>
-                    <label for="discoveryUrl" class="block text-slate-700 text-sm font-semibold mb-2">Discovery Endpoint</label>
+                    <label for="discoveryUrl" class="block text-slate-700 text-sm font-semibold mb-2">
+                        Discovery Endpoint
+                    </label>
                     <div class="flex">
                         <input type="url" id="discoveryUrl"
-                                     class="flex-1 px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                               placeholder="https://example.com/.well-known/openid-configuration">
+                               class="flex-1 px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                               placeholder="https://auth.example.com/.well-known/openid-configuration">
                         <button id="discoverBtn"
-                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">
+                                class="min-w-[5.2rem] bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">
                             Fetch
                         </button>
                     </div>
@@ -64,19 +75,135 @@
                 </div>
 
                 <div>
-                    <label for="clientId" class="block text-slate-700 text-sm font-semibold mb-2">Client ID</label>
+                    <label for="clientId" class="block text-slate-700 text-sm font-semibold mb-2">
+                        Client ID
+                    </label>
                     <input type="text" id="clientId"
                            class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                            placeholder="your-client-id">
                 </div>
 
-                <div id="dynamicFields" class="space-y-4"></div>
+                <div id="dynamicFields" class="space-y-4">
+                    <div class="hidden">
+                        <label for="clientSecret" class="block text-slate-700 text-sm font-semibold mb-2">
+                            Client Secret
+                        </label>
+                        <input type="password" id="clientSecret"
+                               class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                               placeholder="your-client-secret">
+                    </div>
+
+                    <div class="hidden">
+                        <label for="tokenUrl" class="block text-slate-700 text-sm font-semibold mb-2">
+                            Token URL
+                        </label>
+                        <input type="url" id="tokenUrl"
+                               class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                               placeholder="https://auth.example.com/oauth2/token">
+                    </div>
+                    <div class="hidden">
+                        <label for="authorizationUrl" class="block text-slate-700 text-sm font-semibold mb-2">
+                            Authorization URL
+                        </label>
+                        <input type="url" id="authorizationUrl"
+                               class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                               placeholder="https://auth.example.com/oauth2/authorize">
+                    </div>
+                    <div class="hidden">
+                        <label for="scope" class="block text-slate-700 text-sm font-semibold mb-2">
+                            Scope
+                        </label>
+                        <input type="text" id="scope"
+                               class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                               placeholder="openid profile email" value="openid profile email">
+                    </div>
+                    <div class="hidden">
+                        <label for="redirectUri" class="block text-slate-700 text-sm font-semibold mb-2">
+                            Redirect URI
+                        </label>
+                        <input type="url" id="redirectUri"
+                               class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                               placeholder="https://myapp.prod.com/auth/callback">
+                    </div>
+                    <div class="hidden">
+                        <label for="refreshTokenUrl" class="block text-slate-700 text-sm font-semibold mb-2">
+                            Refresh Token URL
+                        </label>
+                        <input type="url" id="refreshTokenUrl"
+                               class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                               placeholder="https://auth.example.com/oauth2/token">
+                    </div>
+                    <div class="hidden">
+                        <label for="refreshToken" class="block text-slate-700 text-sm font-semibold mb-2">
+                            Refresh Token
+                        </label>
+                        <input type="text" id="refreshToken"
+                               class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                    </div>
+                    <div class="hidden">
+                        <label for="codeVerifier" class="block text-slate-700 text-sm font-semibold mb-2">
+                            Code Verifier
+                        </label>
+                        <div class="relative">
+                            <input type="text" id="codeVerifier"
+                                   class="w-full px-3 py-2 pr-10 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                                   placeholder="randomly-generated-code">
+                            <button type="button" id="regenerateCodeVerifier"
+                                    class="absolute right-2 top-1/2 transform -translate-y-1/2 w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-700 hover:bg-gray-100 rounded transition-colors duration-200">
+                                ↺
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-end hidden">
+                        <div class="flex-1">
+                            <label for="codeChallenge" class="block text-slate-700 text-sm font-semibold mb-2">
+                                Code Challenge
+                            </label>
+                            <input type="text" id="codeChallenge" readonly
+                                   class="w-full px-3 py-2 bg-gray-100 border border-slate-300 text-slate-600 font-mono select-none focus:outline-none h-[42px]"
+                                   placeholder="SHA256(randomly-generated-code)">
+                        </div>
+                        <div class="w-1/4 flex-shrink-0">
+                            <label for="codeChallengeMethod" class="block text-slate-700 text-sm font-semibold mb-2">
+                                Method
+                            </label>
+                            <select id="codeChallengeMethod"
+                                    class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 h-[42px]">
+                                <option selected value="S256">S256</option>
+                                <option value="plain">plain</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 hidden">
+                        <div class="flex-1">
+                            <label for="username" class="block text-slate-700 text-sm font-semibold mb-2">
+                                Username
+                            </label>
+                            <input type="text" id="username"
+                                   class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                                   placeholder="foo@gmail.com">
+                        </div>
+                        <div class="flex-1">
+                            <label for="password" class="block text-slate-700 text-sm font-semibold mb-2">
+                                Password
+                            </label>
+                            <input type="password" id="password"
+                                   class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                                   placeholder="••••••••••••">
+                        </div>
+                    </div>
+                </div>
 
                 <div class="flex flex-wrap gap-2 pt-4 border-t border-slate-200">
                     <button id="startAuthBtn"
                             class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">
                         Start Auth
                     </button>
+<!--                    <button id="clearCookiesBtn"-->
+<!--                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">-->
+<!--                        Clear-->
+<!--                    </button>-->
                     <button id="exchangeCodeBtn"
                             class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 font-semibold transition-colors hidden">
                         Exchange
@@ -93,6 +220,7 @@
                             class="bg-slate-500 hover:bg-slate-600 text-white px-4 py-2 font-semibold transition-colors">
                         Reset
                     </button>
+
                 </div>
             </div>
         </div>
@@ -131,9 +259,9 @@
                 <div id="authUrlSection" class="hidden">
                     <h3 class="text-lg font-semibold text-slate-800 mb-4">Authorization URL</h3>
                     <div class="space-y-2">
-              <textarea id="authUrlDisplay" readonly
-                        class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 text-xs font-mono"
-                        rows="4"></textarea>
+                        <textarea id="authUrlDisplay" readonly
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 text-xs font-mono"
+                                rows="4"></textarea>
                         <button id="copyAuthUrlBtn"
                                 class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm font-semibold transition-colors">
                             Copy URL
@@ -188,6 +316,7 @@
 
 <div id="notifications" class="fixed top-4 right-4 space-y-2 z-40 font-mono"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/storage-service.js"></script>
 <script src="assets/js/ui-service.js"></script>

@@ -5,19 +5,26 @@ class OAuth2Playground {
 
     init() {
         this.bindEvents();
-        this.loadStoredData();
-        UIService.updateDynamicFields();
+        UIService.fillFieldsFromCache();
+        UIService.changeAuthenticationFields(document.getElementById("grantType").value);
         UIService.updateVisualization();
     }
 
     bindEvents() {
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
 
-
-        document.getElementById('grantType').addEventListener('change', (e) => {
-            UIService.updateDynamicFields();
-            UIService.updateVisualization();
-            UIService.clearVisualization();
+                StorageService.saveFormData();
+                UIService.showNotification('Configuration saved!', 'success');
+            }
         });
+
+        document.getElementById('syncUrls').addEventListener('click', (e) => UIService.syncAllUrls());
+
+        document.getElementById('grantType').addEventListener('change', (e) => UIService.changeAuthenticationFields(e.target.value));
+        document.getElementById('regenerateCodeVerifier').addEventListener('click', (e) => {UIService.generateAndSetPKCE(true)})
+
         document.getElementById('discoverBtn').addEventListener('click', () => OAuth2Service.discover());
         document.getElementById('startAuthBtn').addEventListener('click', () => OAuth2Service.startAuthorization());
         document.getElementById('exchangeCodeBtn').addEventListener('click', () => OAuth2Service.exchangeCode());

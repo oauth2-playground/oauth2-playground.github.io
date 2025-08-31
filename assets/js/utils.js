@@ -18,28 +18,29 @@ const Utils = {
         return result;
     },
 
-    async generatePKCEPairs(method) {
-        const codeVerifier = this.generatePKCE(64);
-        const codeChallenge = await this.getCodeChallenge(codeVerifier, method);
+    base64URL(string) {
+        return string
+            .toString(CryptoJS.enc.Base64)
+            .replace(/=/g, '')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_');
+    },
+
+    generatePKCEPairs(method) {
+        const codeVerifier = this.generateCodeVerifier(64);
+        const codeChallenge = this.generateCodeChallenge(codeVerifier, method);
         return { codeVerifier, codeChallenge };
     },
 
-    async generatePKCE(bytes) {
-        return this.generateRandomString(bytes);
+    generateCodeVerifier(bytes) {
+        let rand = new Uint8Array(bytes);
+        crypto.getRandomValues(rand);
+        return this.base64URL(new CryptoJS.lib.WordArray.init(rand))
     },
 
-    async getCodeChallenge(codeVerifier, method) {
-        if (method === 'S256') {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(codeVerifier);
-            const digest = await crypto.subtle.digest('SHA-256', data);
-            codeVerifier = btoa(String.fromCharCode(...new Uint8Array(digest)))
-                .replace(/\+/g, '-')
-                .replace(/\//g, '_')
-                .replace(/=/g, '');
-        }
-
-        return codeVerifier;
+    generateCodeChallenge(codeVerifier, method) {
+        return method === 'S256' ?
+            this.base64URL(CryptoJS.SHA256(codeVerifier)) : codeVerifier;
     },
 
     generateMockJWT() {

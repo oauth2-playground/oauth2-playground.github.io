@@ -64,7 +64,6 @@
     transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-/* Clases para el contenedor de formularios con scroll */
 .form-container {
     display: flex;
     flex-direction: column;

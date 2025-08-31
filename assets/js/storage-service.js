@@ -1,19 +1,51 @@
 const StorageService = {
     STORAGE_KEY: 'oauth2_playground_data',
 
+    _encodeToBase64(data) {
+        try {
+            return btoa(unescape(encodeURIComponent(data)));
+        } catch (error) {
+            console.warn('Failed to encode to Base64:', error);
+            return data;
+        }
+    },
+
+    _decodeFromBase64(encodedData) {
+        try {
+            return decodeURIComponent(escape(atob(encodedData)));
+        } catch (error) {
+            console.warn('Failed to decode from Base64:', error);
+            return encodedData;
+        }
+    },
+
     saveInStorage(key, value) {
         try {
-            const data = JSON.parse(localStorage.getItem(this.STORAGE_KEY)) || {};
+            const existingData = localStorage.getItem(this.STORAGE_KEY);
+            let data = {};
+
+            if (existingData) {
+                const decodedExisting = this._decodeFromBase64(existingData);
+                data = JSON.parse(decodedExisting);
+            }
+
             data[key] = value;
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+
+            const encodedData = this._encodeToBase64(JSON.stringify(data));
+            localStorage.setItem(this.STORAGE_KEY, encodedData);
         } catch (error) {
             console.warn('Failed to save data:', error);
         }
     },
 
-    getFromStorage(key) {
+    getFromStorage(key = this.STORAGE_KEY) {
         try {
-            const data = JSON.parse(localStorage.getItem(this.STORAGE_KEY)) || {};
+            const encodedData = localStorage.getItem(this.STORAGE_KEY);
+            if (!encodedData) return null;
+
+            const decodedData = this._decodeFromBase64(encodedData);
+            const data = JSON.parse(decodedData);
+
             return data[key];
         } catch (error) {
             console.warn('Failed to retrieve data:', error);
@@ -23,6 +55,7 @@ const StorageService = {
 
     saveFormData() {
         const data = {
+            grantType: document.getElementById("grantType")?.value || '',
             baseUrl: document.getElementById('baseUrl')?.value || '',
             discoveryUrl: document.getElementById('discoveryUrl')?.value || '',
             tokenUrl: document.getElementById('tokenUrl')?.value || '',
@@ -34,13 +67,14 @@ const StorageService = {
             redirectUri: document.getElementById('redirectUri')?.value || '',
             scope: document.getElementById('scope')?.value || '',
             refreshTokenUrl: document.getElementById('refreshTokenUrl')?.value || '',
+            codeChallengeMethod: document.getElementById('codeChallengeMethod')?.value || '',
             timestamp: Date.now()
         };
 
-        const dynamicFields = document.querySelectorAll('#dynamicFields input, #dynamicFields textarea, #dynamicFields select');
+        const dynamicFields = document.querySelectorAll('#dynamicFields input, #dynamicFields select');
         dynamicFields.forEach(field => {
             if (field.id && !field.readOnly) {
-                data[field.id] = field.value;
+                // data[field.id] = field.value;
             }
         });
 
@@ -49,17 +83,16 @@ const StorageService = {
 
     loadFormData() {
         try {
-            const saved = localStorage.getItem(this.STORAGE_KEY);
-            if (!saved) return;
+            const encodedData = localStorage.getItem(this.STORAGE_KEY);
+            if (!encodedData) return;
 
-            const data = JSON.parse(saved);
+            const decodedData = this._decodeFromBase64(encodedData);
+            const data = JSON.parse(decodedData);
 
-            // Load basic fields
             if (data.baseUrl) document.getElementById('baseUrl').value = data.baseUrl;
             if (data.discoveryUrl) document.getElementById('discoveryUrl').value = data.discoveryUrl;
             if (data.clientId) document.getElementById('clientId').value = data.clientId;
 
-            // Load dynamic fields
             setTimeout(() => {
                 Object.keys(data).forEach(key => {
                     const element = document.getElementById(key);
@@ -76,10 +109,12 @@ const StorageService = {
 
     checkDiscoveryChange(newUrl) {
         try {
-            const saved = localStorage.getItem(this.STORAGE_KEY);
-            if (!saved) return false;
+            const encodedData = localStorage.getItem(this.STORAGE_KEY);
+            if (!encodedData) return false;
 
-            const data = JSON.parse(saved);
+            const decodedData = this._decodeFromBase64(encodedData);
+            const data = JSON.parse(decodedData);
+
             return data.discoveryUrl && data.discoveryUrl !== newUrl;
         } catch (error) {
             return false;

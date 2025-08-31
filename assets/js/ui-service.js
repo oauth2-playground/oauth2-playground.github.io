@@ -1,4 +1,38 @@
 const UIService = {
+    fillFieldsFromCache() {
+        const oauth2PlaygroundDataString = StorageService.getFromStorage();
+        const oauth2PlaygroundData = oauth2PlaygroundDataString ? JSON.parse(oauth2PlaygroundDataString) : {};
+
+        Array
+            .from([
+                'grantType', 'baseUrl', 'discoveryUrl',
+                'tokenUrl', 'authorizationUrl', 'userinfoUrl', 'revocationUrl',
+                'clientId', 'clientSecret', 'redirectUri', 'scope', 'refreshTokenUrl',
+                'codeChallengeMethod'
+            ]).forEach((field) => {
+                if (oauth2PlaygroundData[field] !== undefined) {const element = document.getElementById(field);
+                    if (element) {
+                        element.value = oauth2PlaygroundData[field];
+                    }
+                }
+            });
+    },
+
+    changeAuthenticationFields(selectedGrantType) {
+        if (selectedGrantType !== 'none') {
+            this.updateFieldsForGrantType(selectedGrantType);
+        } else {
+            const dynamicFields = document.getElementById('dynamicFields');
+            Array.from(dynamicFields.querySelectorAll('div')).forEach(field => {
+                if (field.id !== 'dynamicFields') {
+                    field.classList.add('hidden');
+                }
+            });
+        }
+        this.updateVisualization();
+        this.clearVisualization();
+    },
+
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         const colors = {
@@ -83,129 +117,72 @@ const UIService = {
         document.getElementById('configTokenUrl').textContent = tokenUrl;
     },
 
-    updateDynamicFields() {
-        const grantType = document.getElementById('grantType').value;
+    generateAndSetPKCE(forceRegeneration) {
+        const methodSelect = document.getElementById('codeChallengeMethod');
+        const method = methodSelect ? methodSelect.value : 'S256';
 
-        if (grantType === 'none') return;
+        const verifierInput = document.getElementById('codeVerifier');
+        const challengeInput = document.getElementById('codeChallenge');
+        const methodInput = document.getElementById('codeChallengeMethod');
 
-        const container = document.getElementById('dynamicFields');
-        container.innerHTML = '';
+        if (verifierInput.value !== "" && !forceRegeneration) {
+            challengeInput.value = Utils.generateCodeChallenge(verifierInput.value, method);
+        } else {
+            const pkce = Utils.generatePKCEPairs(method);
 
-        console.log(grantType)
+            if (verifierInput) verifierInput.value = pkce.codeVerifier;
+            if (challengeInput) challengeInput.value = pkce.codeChallenge;
+            if (methodInput) methodInput.value = method;
+        }
+        StorageService.saveFormData();
+    },
 
-
-        const fields = this.getFieldsForGrantType(grantType);
-
-        fields.forEach(field => {
-            const fieldDiv = document.createElement('div');
-            // fieldDiv.className = 'space-y-2';
-
-            const label = document.createElement('label');
-            label.className = 'block text-slate-700 text-sm font-semibold mb-2';
-            label.textContent = field.label;
-
-            let input;
-                input = document.createElement('input');
-                input.className = 'w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400';
-                input.type = field.type || 'text';
+    updateFieldsForGrantType(grantType) {
 
 
-            input.id = field.id;
-            input.placeholder = field.placeholder || '';
-            input.readOnly = field.readonly || false;
+        const dynamicFields = document.getElementById('dynamicFields');
 
-            if (field.readonly) {
-                input.className += ' bg-gray-100';
-            }
-
-            input.addEventListener("input", () => {
-                StorageService.saveFormData();
-                this.updateVisualization();
+        const getElementWithFieldId = (id) =>
+            Array.from(dynamicFields.querySelectorAll('.hidden')).find(element => {
+                const field = element.querySelector(`#${id}`);
+                return field !== null;
             });
 
-            fieldDiv.appendChild(label);
-            fieldDiv.appendChild(input);
-            container.appendChild(fieldDiv);
+        const commonFields = ["tokenUrl", "authorizationUrl", "scope"];
+        const grantTypeFields = {
+            authorization_code_pkce: [...commonFields, "redirectUri", "codeVerifier", "codeChallenge"],
+            authorization_code: ["clientSecret", ...commonFields, "redirectUri"],
+            implicit: ["authorizationUrl", "redirectUri", "scope"],
+            password: ["clientSecret", "tokenUrl", "scope", "username"],
+            client_credentials: ["clientSecret", "tokenUrl", "scope" ],
+            refresh_token: [ "clientSecret", "refreshTokenUrl", "refreshToken"]
+        };
+
+        // hide every field
+        Array.from(dynamicFields.children).forEach(field => {
+            field.classList.add("hidden");
         });
 
+        if (grantTypeFields[grantType]) {
+            const fieldsToShow = grantTypeFields[grantType];
+            fieldsToShow.forEach(fieldId => {
+                const fieldElement = getElementWithFieldId(fieldId);
+                if (fieldElement) {
+                    fieldElement.classList.remove("hidden");
+                }
+            });
+        }
+
         if (grantType === 'authorization_code_pkce') {
-            this.generateAndSetPKCE();
+            const codeChallengeMethodSelectorElement = document.getElementById('codeChallengeMethod');
+            codeChallengeMethodSelectorElement.addEventListener('change', () => {
+                this.generateAndSetPKCE(false);
+            })
+
+            this.generateAndSetPKCE(false);
         }
 
-        StorageService.loadFormData();
-    },
-
-    async generateAndSetPKCE() {
-        try {
-            const pkce = await Utils.generatePKCE(64);
-
-            setTimeout(() => {
-                const verifierInput = document.getElementById('codeVerifier');
-                const challengeInput = document.getElementById('codeChallenge');
-                const methodInput = document.getElementById('codeChallengeMethod');
-
-                if (verifierInput) verifierInput.value = pkce.codeVerifier;
-                if (challengeInput) challengeInput.value = pkce.codeChallenge;
-                if (methodInput) methodInput.value = pkce.codeChallengeMethod;
-
-                StorageService.saveFormData();
-            }, 100);
-        } catch (error) {
-            console.error('Failed to generate PKCE:', error);
-        }
-    },
-
-    getFieldsForGrantType(grantType) {
-        const commonFields = [
-            {id: 'tokenUrl', label: 'Token URL', placeholder: 'https://auth.example.com/oauth/token'},
-            {id: 'authorizationUrl', label: 'Authorization URL', placeholder: 'https://auth.example.com/oauth/authorize'},
-            {id: 'scope', label: 'Scope', placeholder: 'openid profile email'}
-        ];
-
-        switch (grantType) {
-            case 'authorization_code_pkce':
-                return [
-                    ...commonFields,
-                    {id: 'redirectUri', label: 'Redirect URI', placeholder: 'https://yourapp.com/callback'},
-                    {id: 'codeVerifier', label: 'Code Verifier', readonly: false},
-                    {id: 'codeChallenge', label: 'Code Challenge', readonly: true},
-                    {id: 'codeChallengeMethod', label: 'Code Challenge Method', readonly: false}
-                ];
-            case 'authorization_code':
-                return [
-                    {id: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: 'your-client-secret'},
-                    ...commonFields,
-                    {id: 'redirectUri', label: 'Redirect URI', placeholder: 'https://yourapp.com/callback'},
-                ];
-            case 'implicit':
-                return [
-                    {id: 'authorizationUrl', label: 'Authorization URL', placeholder: 'https://auth.example.com/oauth/authorize'},
-                    {id: 'redirectUri', label: 'Redirect URI', placeholder: 'https://yourapp.com/callback'},
-                    {id: 'scope', label: 'Scope', placeholder: 'openid profile email'},
-                ];
-            case 'password':
-                return [
-                    {id: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: 'your-client-secret'},
-                    {id: 'tokenUrl', label: 'Token URL', placeholder: 'https://auth.example.com/oauth/token'},
-                    {id: 'scope', label: 'Scope', placeholder: 'openid profile email'},
-                    {id: 'username', label: 'Username', placeholder: 'user@example.com'},
-                    {id: 'password', label: 'Password', type: 'password', placeholder: 'password'},
-                ];
-            case 'client_credentials':
-                return [
-                    {id: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: 'your-client-secret'},
-                    {id: 'tokenUrl', label: 'Token URL', placeholder: 'https://auth.example.com/oauth/token'},
-                    {id: 'scope', label: 'Scope', placeholder: 'api:read api:write'}
-                ];
-            case 'refresh_token':
-                return [
-                    {id: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: 'your-client-secret'},
-                    {id: 'refreshTokenUrl', label: 'Token URL', placeholder: 'https://auth.example.com/oauth/token'},
-                    {id: 'refreshToken', label: 'Refresh Token', type: 'text', placeholder: 'your-refresh-token'}
-                ];
-            default:
-                return commonFields;
-        }
+        StorageService.saveFormData();
     },
 
     showSection(sectionId) {
@@ -261,16 +238,6 @@ const UIService = {
             }
         });
 
-        const grantTypeSelect = document.getElementById('grantType');
-        if (grantTypeSelect) {
-            grantTypeSelect.addEventListener('change', () => {
-                this.updateDynamicFields();
-                StorageService.saveFormData();
-                this.updateVisualization();
-                this.clearVisualization();
-            });
-        }
-
         const authCodeInput = document.getElementById('authCodeInput');
         if (authCodeInput) {
             authCodeInput.addEventListener('input', () => {
@@ -292,22 +259,52 @@ const UIService = {
         } catch (error) {
             this.showNotification('Failed to copy URL', 'error');
         }
+    },
+
+    syncAllUrls() {
+        if (!document.getElementById("baseUrl").value) {
+            this.showNotification('Please enter a Base URL first.', 'warning');
+            return;
+        }
+
+        const trimSlash = (url) => {
+            const input = document.getElementById(url);
+            if (input) {
+                input.value = input.value.replace(/\/+$/, "");
+            }
+        }
+
+        const urls = {
+            "tokenUrl":"/oauth2/token",
+            "authorizationUrl": "/oauth2/authorize",
+            "refreshTokenUrl": "/oauth2/token",
+            "discoveryUrl": "/.well-known/openid-configuration"
+        }
+
+        const baseUrl = document.getElementById("baseUrl").value;
+        trimSlash('baseUrl');
+
+        const toOverwrite = [];
+        Object.entries(urls).forEach(([key, value]) => {
+            const input = document.getElementById(key);
+            if (input) {
+                if (input.value && input.value !== baseUrl + value) {
+                    toOverwrite.push({input, value: baseUrl + value});
+                } else {
+                    input.value = baseUrl + value;
+                }
+            }
+        });
+
+        if (toOverwrite.length > 0) {
+            this.showModal(
+                `Some fields already have values. Do you want to overwrite them all?`,
+                () => {
+                    toOverwrite.forEach(({input, value}) => {
+                        input.value = value;
+                    });
+                }
+            );
+        }
     }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

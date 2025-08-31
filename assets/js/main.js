@@ -11,6 +11,8 @@ class OAuth2Playground {
     }
 
     bindEvents() {
+
+
         document.getElementById('grantType').addEventListener('change', (e) => {
             UIService.updateDynamicFields();
             UIService.updateVisualization();

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="bg-slate-50 text-slate-700 font-mono min-h-screen flex items-center justify-center p-4">
+<div class="w-full max-w-6xl mx-auto bg-white border border-slate-200 shadow-lg p-6">
+    <div class="border-b border-slate-200 pb-4 mb-6">
+        <h1 class="text-2xl font-bold text-slate-800 flex items-center">
+            <span class="mr-2 text-blue-500"></span>
+            OAuth2 Playground
+        </h1>
+        <p class="text-slate-600 text-sm mt-1">
+            Test OAuth2 flows interactively without data tracking nor credentials storing
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[68vh]">
+        <div class="border border-slate-200 bg-white form-container flex flex-col">
+            <div class="bg-blue-50 border-b border-slate-200 p-3 flex-shrink-0">
+                <h2 class="text-lg font-semibold text-slate-800 flex items-center">
+                    <span class="mr-2 text-blue-500">></span>
+                    OAuth2 Configuration
+                </h2>
+            </div>
+
+            <div class="form-content space-y-2 p-5 flex-1 overflow-y-auto">
+                <div>
+                    <label for="baseUrl" class="block text-slate-700 text-sm font-semibold mb-2">Base URL</label>
+                    <input type="url" id="baseUrl"
+                           class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                           placeholder="https://auth.example.com">
+                </div>
+
+                <div>
+                    <label for="discoveryUrl" class="block text-slate-700 text-sm font-semibold mb-2">Discovery Endpoint</label>
+                    <div class="flex">
+                        <input type="url" id="discoveryUrl"
+                               class="flex-1 px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                               placeholder="https://example.com/.well-known/openid-configuration">
+                        <button id="discoverBtn"
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">
+                            Fetch
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="grantType" class="block text-slate-700 text-sm font-semibold mb-2">Grant Type</label>
+                    <select id="grantType"
+                            class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400">
+                        <option selected disabled value="none">Select a grant type</option>
+                        <option value="authorization_code_pkce">Authorization Code + PKCE</option>
+                        <option value="authorization_code">Authorization Code</option>
+                        <option value="implicit">Implicit</option>
+                        <option value="password">Password (Resource Owner Password Credentials)</option>
+                        <option value="client_credentials">Client Credentials</option>
+                        <option value="refresh_token">Refresh Token</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="clientId" class="block text-slate-700 text-sm font-semibold mb-2">Client ID</label>
+                    <input type="text" id="clientId"
+                           class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                           placeholder="your-client-id">
+                </div>
+
+                <div id="dynamicFields" class="space-y-4"></div>
+
+                <div class="flex flex-wrap gap-2 pt-4 border-t border-slate-200">
+                    <button id="startAuthBtn"
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">
+                        Start Auth
+                    </button>
+                    <button id="exchangeCodeBtn"
+                            class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 font-semibold transition-colors hidden">
+                        Exchange
+                    </button>
+                    <button id="getUserInfoBtn"
+                            class="bg-violet-500 hover:bg-violet-600 text-white px-4 py-2 font-semibold transition-colors hidden">
+                        User Info
+                    </button>
+                    <button id="refreshTokenBtn"
+                            class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 font-semibold transition-colors hidden">
+                        Refresh
+                    </button>
+                    <button id="resetBtn"
+                            class="bg-slate-500 hover:bg-slate-600 text-white px-4 py-2 font-semibold transition-colors">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="border border-slate-200 bg-white flex flex-col">
+            <div class="bg-blue-50 border-b border-slate-200 p-3">
+                <h2 class="text-lg font-semibold text-slate-800 flex items-center">
+                    <span class="mr-2 text-blue-500">⚙</span>
+                    Results Visualization
+                </h2>
+            </div>
+
+            <div class="p-4 space-y-4 flex-1 overflow-y-auto">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Current Configuration</h3>
+                    <div class="bg-slate-50 border border-slate-200 p-3 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="font-semibold text-slate-700">Grant Type:</span>
+                            <span id="configGrantType" class="text-slate-600">Not selected</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-semibold text-slate-700">Client ID:</span>
+                            <span id="configClientId" class="text-slate-600">Not set</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-semibold text-slate-700">Auth Endpoint:</span>
+                            <span id="configAuthUrl" class="text-slate-600 text-xs break-all">Not set</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-semibold text-slate-700">Token Endpoint:</span>
+                            <span id="configTokenUrl" class="text-slate-600 text-xs break-all">Not set</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="authUrlSection" class="hidden">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Authorization URL</h3>
+                    <div class="space-y-2">
+              <textarea id="authUrlDisplay" readonly
+                        class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 text-xs font-mono"
+                        rows="4"></textarea>
+                        <button id="copyAuthUrlBtn"
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm font-semibold transition-colors">
+                            Copy URL
+                        </button>
+                    </div>
+                </div>
+
+                <div id="authCodeSection" class="hidden">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Authorization Code</h3>
+                    <input type="text" id="authCodeInput"
+                           class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                           placeholder="Paste authorization code here">
+                </div>
+
+                <div id="tokenSection" class="hidden">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Token Response</h3>
+                    <div id="tokenDisplay"
+                         class="json-display bg-slate-50 border border-slate-300 p-3 text-slate-700 font-mono text-xs overflow-auto max-h-48"></div>
+                </div>
+
+                <div id="userInfoSection" class="hidden">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">UserInfo Response</h3>
+                    <div id="userInfoDisplay"
+                         class="json-display bg-slate-50 border border-slate-300 p-3 text-slate-700 font-mono text-xs overflow-auto max-h-48"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white border border-slate-300 shadow-xl max-w-md w-full mx-4">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <span class="mr-3 text-xl">⚠</span>
+                <h3 class="text-lg font-semibold text-slate-800">Confirm Action</h3>
+            </div>
+            <p id="modalMessage" class="text-slate-600 mb-6 font-mono">Are you sure you want to proceed?</p>
+            <div class="flex justify-end space-x-2">
+                <button id="modalCancel"
+                        class="px-4 py-2 text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 font-semibold transition-colors">
+                    Cancel
+                </button>
+                <button id="modalConfirm"
+                        class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white border border-red-500 font-semibold transition-colors">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="notifications" class="fixed top-4 right-4 space-y-2 z-40 font-mono"></div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/storage-service.js"></script>
+<script src="assets/js/ui-service.js"></script>
+<script src="assets/js/oauth2-service.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -5,7 +5,6 @@ const StorageService = {
         try {
             return btoa(unescape(encodeURIComponent(data)));
         } catch (error) {
-            console.warn('Failed to encode to Base64:', error);
             return data;
         }
     },
@@ -14,14 +13,13 @@ const StorageService = {
         try {
             return decodeURIComponent(escape(atob(encodedData)));
         } catch (error) {
-            console.warn('Failed to decode from Base64:', error);
             return encodedData;
         }
     },
 
-    saveInStorage(key, value) {
+    saveInStorage(key, value, storage = localStorage) {
         try {
-            const existingData = localStorage.getItem(this.STORAGE_KEY);
+            const existingData = storage.getItem(this.STORAGE_KEY);
             let data = {};
 
             if (existingData) {
@@ -32,15 +30,14 @@ const StorageService = {
             data[key] = value;
 
             const encodedData = this._encodeToBase64(JSON.stringify(data));
-            localStorage.setItem(this.STORAGE_KEY, encodedData);
+            storage.setItem(this.STORAGE_KEY, encodedData);
         } catch (error) {
-            console.warn('Failed to save data:', error);
         }
     },
 
-    getFromStorage(key = this.STORAGE_KEY) {
+    getFromStorage(key = this.STORAGE_KEY, storage = localStorage) {
         try {
-            const encodedData = localStorage.getItem(this.STORAGE_KEY);
+            const encodedData = storage.getItem(this.STORAGE_KEY);
             if (!encodedData) return null;
 
             const decodedData = this._decodeFromBase64(encodedData);
@@ -48,7 +45,6 @@ const StorageService = {
 
             return data[key];
         } catch (error) {
-            console.warn('Failed to retrieve data:', error);
             return null;
         }
     },
@@ -56,7 +52,7 @@ const StorageService = {
     saveFormData() {
         const data = {
             grantType: document.getElementById("grantType")?.value || '',
-            baseUrl: document.getElementById('baseUrl')?.value || '',
+            // baseUrl: document.getElementById('baseUrl')?.value || '',
             discoveryUrl: document.getElementById('discoveryUrl')?.value || '',
             tokenUrl: document.getElementById('tokenUrl')?.value || '',
             authorizationUrl: document.getElementById('authorizationUrl')?.value || '',
@@ -71,13 +67,6 @@ const StorageService = {
             timestamp: Date.now()
         };
 
-        const dynamicFields = document.querySelectorAll('#dynamicFields input, #dynamicFields select');
-        dynamicFields.forEach(field => {
-            if (field.id && !field.readOnly) {
-                // data[field.id] = field.value;
-            }
-        });
-
         this.saveInStorage(this.STORAGE_KEY, JSON.stringify(data));
     },
 
@@ -89,18 +78,16 @@ const StorageService = {
             const decodedData = this._decodeFromBase64(encodedData);
             const data = JSON.parse(decodedData);
 
-            if (data.baseUrl) document.getElementById('baseUrl').value = data.baseUrl;
+            // if (data.baseUrl) document.getElementById('baseUrl').value = data.baseUrl;
             if (data.discoveryUrl) document.getElementById('discoveryUrl').value = data.discoveryUrl;
             if (data.clientId) document.getElementById('clientId').value = data.clientId;
 
-            setTimeout(() => {
-                Object.keys(data).forEach(key => {
+           Object.keys(data).forEach(key => {
                     const element = document.getElementById(key);
                     if (element && data[key] && !element.readOnly) {
                         element.value = data[key];
                     }
                 });
-            }, 100);
 
         } catch (error) {
             console.warn('Failed to load stored data:', error);

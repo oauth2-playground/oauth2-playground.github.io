@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Callback</title>
+</head>
+<body>
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            const state = params.get('state');
+            const error = params.get('error');
+
+            const message = { type: 'oauth2_callback', state: state };
+
+            if (code) {
+                console.log(message);
+                message.code = code;
+
+                window.location.href = `/?code=${code}&state=${state}`;
+
+                return;
+            } else if (error) {
+                message.error = error;
+                message.error_description = params.get('error_description');
+                window.location.href = `/?error=${error}&error_description=${message.error_description}&state=${state}`;
+
+                return;
+            }
+
+            window.location.href='/index.html'
+        })();
+    </script>
+</body>
+</html>

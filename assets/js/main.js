@@ -4,38 +4,36 @@ class OAuth2Playground {
     }
 
     init() {
+        CallbackService.handleCallbackCode();
+
         this.bindEvents();
         UIService.fillFieldsFromCache();
-        UIService.changeAuthenticationFields(document.getElementById("grantType").value);
+        UIService.changeAuthenticationFields($("#grantType").val());
         UIService.updateVisualization();
     }
 
     bindEvents() {
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-
-                StorageService.saveFormData();
-                UIService.showNotification('Configuration saved!', 'success');
-            }
+        $(document).on('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') // ctrl/cmd + s
+                UIService.evalIfContentCanBeSavedAndSaveIt(e)
         });
 
-        document.getElementById('syncUrls').addEventListener('click', (e) => UIService.syncAllUrls());
+        $('#grantType').on('change', (e) => { UIService.changeAuthenticationFields(e.target.value); });
 
-        document.getElementById('grantType').addEventListener('change', (e) => UIService.changeAuthenticationFields(e.target.value));
-        document.getElementById('regenerateCodeVerifier').addEventListener('click', (e) => {UIService.generateAndSetPKCE(true)})
+        $('#codeVerifier').on('keypress', (e) => { UIService.generateAndSetPKCE(false); });
+        $('#regenerateCodeVerifier').on('click', (e) => { UIService.generateAndSetPKCE(true); });
 
-        document.getElementById('discoverBtn').addEventListener('click', () => OAuth2Service.discover());
-        document.getElementById('startAuthBtn').addEventListener('click', () => OAuth2Service.startAuthorization());
-        document.getElementById('exchangeCodeBtn').addEventListener('click', () => OAuth2Service.exchangeCode());
-        document.getElementById('getUserInfoBtn').addEventListener('click', () => OAuth2Service.getUserInfo());
-        document.getElementById('refreshTokenBtn').addEventListener('click', () => OAuth2Service.refreshToken());
-        document.getElementById('resetBtn').addEventListener('click', () => OAuth2Service.reset());
-        document.getElementById('copyAuthUrlBtn').addEventListener('click', () => UIService.copyAuthUrl());
+        $('#discoverBtn').on('click', () => { OAuth2Service.discover(); });
+        $('#startAuthBtn').on('click', () => { OAuth2Service.startAuthorization(); });
+        $('#exchangeCodeBtn').on('click', () => { OAuth2Service.exchangeCode(); });
+        $('#getUserInfoBtn').on('click', () => { OAuth2Service.getUserInfo(); });
+        $('#refreshTokenBtn').on('click', () => { OAuth2Service.refreshToken(); });
+        $('#resetBtn').on('click', () => { OAuth2Service.reset(); });
+        // $('#authUrlDisplay').on('click', (e) => { UIService.handleAuthUrlClick(e); });
 
-        document.getElementById('modalCancel').addEventListener('click', () => UIService.hideModal());
+        $('#modalCancel').on('click', () => { UIService.hideModal(); });
 
-        document.addEventListener('click', (e) => {
+        $(document).on('click', (e) => {
             if (e.target.id === 'confirmModal') {
                 UIService.hideModal();
             }
@@ -49,6 +47,6 @@ class OAuth2Playground {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+$(document).ready(function() {
     new OAuth2Playground();
 });

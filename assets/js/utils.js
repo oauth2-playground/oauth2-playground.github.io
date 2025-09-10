@@ -9,13 +9,9 @@ const Utils = {
     },
 
     generateRandomString(length) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-
-        for (let i = 0; i < length; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
+        let rand = new Uint8Array(length);
+        crypto.getRandomValues(rand);
+        return new CryptoJS.lib.WordArray.init(rand).toString();
     },
 
     base64URL(string) {
@@ -33,9 +29,7 @@ const Utils = {
     },
 
     generateCodeVerifier(bytes) {
-        let rand = new Uint8Array(bytes);
-        crypto.getRandomValues(rand);
-        return this.base64URL(new CryptoJS.lib.WordArray.init(rand))
+        return this.base64URL(this.generateRandomString(bytes))
     },
 
     generateCodeChallenge(codeVerifier, method) {

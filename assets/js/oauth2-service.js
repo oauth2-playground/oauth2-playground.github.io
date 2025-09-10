@@ -2,7 +2,7 @@ const OAuth2Service = {
     tokens: {},
 
     async discover() {
-        const url = document.getElementById('discoveryUrl').value;
+        const url = $('#discoveryUrl').val();
         if (!url) {
             UIService.showNotification('Please enter a discovery URL', 'warning');
             return;
@@ -19,44 +19,80 @@ const OAuth2Service = {
 
     async performDiscovery(url) {
         UIService.showLoading('discoverBtn');
-
         try {
-            await Utils.delay(1000);
+            const response = await fetch(url);
 
-            const mockResponse = {
-                authorization_endpoint: 'https://auth.example.com/oauth/authorize',
-                token_endpoint: 'https://auth.example.com/oauth/token',
-                userinfo_endpoint: 'https://auth.example.com/userinfo',
-                revocation_endpoint: 'https://auth.example.com/oauth/revoke',
-                issuer: 'https://auth.example.com',
-                scopes_supported: ['openid', 'profile', 'email'],
-                response_types_supported: ['code', 'token', 'id_token'],
-                grant_types_supported: ['authorization_code', 'implicit', 'refresh_token', 'client_credentials'],
-                code_challenge_methods_supported: ['S256', 'plain']
+            if (!response.ok) {
+                UIService.showNotification('Failed to fetch discovery document: ' + response.statusText, 'error');
+                UIService.hideLoading('discoverBtn');
+                return;
+            }
+            const openidConfig = await response.json();
+            // ejwmdZvXol2Uhlawky9s7fXxfVwa
+            const OAuth2Provider = {
+                tokenEndpoint: openidConfig.token_endpoint,
+                authorizationEndpoint: openidConfig.authorization_endpoint,
+                userInfoEndpoint: openidConfig.userinfo_endpoint,
+                revocationEndpoint: openidConfig.revocation_endpoint,
+                issuer: openidConfig.issuer,
+                grantTypes: openidConfig.grant_types_supported || [],
+                responseTypes: openidConfig.response_types_supported || [],
+                scopes: openidConfig.scopes_supported || [],
+                codeChallengeMethods: openidConfig.code_challenge_methods_supported || []
             };
 
-            const authUrlInput = document.getElementById('authorizationUrl');
-            const tokenUrlInput = document.getElementById('tokenUrl');
+            $('#tokenUrl').val(OAuth2Provider.tokenEndpoint);
+            $('#authorizationUrl').val(OAuth2Provider.authorizationEndpoint);
 
-            if (authUrlInput) authUrlInput.value = mockResponse.authorization_endpoint;
-            if (tokenUrlInput) tokenUrlInput.value = mockResponse.token_endpoint;
+            const $grantTypeSelectOptions = $('#grantType').children();
 
-            const baseUrl = Utils.extractDomainFromUrl(url);
-            document.getElementById('baseUrl').value = baseUrl;
+            $grantTypeSelectOptions.slice(1).addClass("hidden");
 
-            StorageService.saveFormData();
+            $grantTypeSelectOptions.each(function () {
+                const $option = $(this);
+                if ($option.val() === "none") return;
+
+                const isSupported = OAuth2Provider.grantTypes.some(grantType =>
+                    $option.val().includes(grantType) || grantType.includes($option.val())
+                );
+
+                if (isSupported) {
+                    $option.removeClass("hidden");
+                }
+            });
+
+            const $codeChallengeMethodOptions = $('#codeChallengeMethod').children();
+
+            $codeChallengeMethodOptions.addClass("hidden");
+
+            $codeChallengeMethodOptions.each(function () {
+                const $option = $(this);
+                const isSupported = OAuth2Provider.codeChallengeMethods.some(method =>
+                    $option.val() === method
+                );
+
+                if (isSupported) {
+                    $option.removeClass("hidden");
+                }
+            });
+
+            if (OAuth2Provider.codeChallengeMethods.length === 0) {
+                $codeChallengeMethodOptions.filter('[value="S256"]').removeClass("hidden");
+            }
+
             UIService.updateVisualization();
-            UIService.showNotification('Discovery completed successfully!', 'success');
+            UIService.showNotification('Discovery completed', 'success');
+
         } catch (error) {
-            UIService.showNotification('Discovery failed: ' + error.message, 'error');
+            UIService.showNotification('Discovery failed', 'error');
         } finally {
             UIService.hideLoading('discoverBtn');
         }
     },
 
     async startAuthorization() {
-        const grantType = document.getElementById('grantType').value;
-        const clientId = document.getElementById('clientId').value;
+        const grantType = $('#grantType').val();
+        const clientId = $('#clientId').val();
 
         if (!clientId) {
             UIService.showNotification('Client ID is required', 'warning');
@@ -74,6 +110,8 @@ const OAuth2Service = {
                 await this.refreshToken();
             } else {
                 this.generateAuthorizationUrl();
+                $('#authUrlDisplay').off('click').on('click', (e) => UIService.handleAuthUrlClick(e));
+                $('#getAuthCodeBtn').off('click').on('click', (e) => this.getAuthorizationCode());
             }
         } catch (error) {
             UIService.showNotification('Authorization failed: ' + error.message, 'error');
@@ -83,11 +121,12 @@ const OAuth2Service = {
     },
 
     generateAuthorizationUrl() {
-        const grantType = document.getElementById('grantType').value;
-        const clientId = document.getElementById('clientId').value;
-        const authUrl = document.getElementById('authorizationUrl')?.value;
-        const scope = document.getElementById('scope')?.value;
-        const redirectUri = document.getElementById('redirectUri')?.value;
+        const grantType = $('#grantType').val();
+        const clientId = $('#clientId').val();
+        const authUrl = $('#authorizationUrl').val();
+        const scope = $('#scope').val();
+        const redirectUri = $('#redirectUri').val();
+        const state = Utils.generateRandomString(32);
 
         if (!authUrl || !redirectUri) {
             UIService.showNotification('Authorization URL and Redirect URI are required', 'warning');
@@ -99,33 +138,31 @@ const OAuth2Service = {
             client_id: clientId,
             redirect_uri: redirectUri,
             scope: scope || 'openid profile email',
-            state: Utils.generateRandomString(32)
+            state: this.generateState()
         });
 
         if (grantType === 'authorization_code_pkce') {
-            const codeChallenge = document.getElementById('codeChallenge')?.value;
-            const codeChallengeMethod = document.getElementById('codeChallengeMethod')?.value;
+            const codeChallenge = $('#codeChallenge').val();
+            const codeChallengeMethod = $('#codeChallengeMethod').val();
             if (codeChallenge && codeChallengeMethod) {
                 params.append('code_challenge', codeChallenge);
                 params.append('code_challenge_method', codeChallengeMethod);
             }
         }
 
-        const fullUrl = `${authUrl}?${params.toString()}`;
-
-        document.getElementById('authUrlDisplay').value = fullUrl;
+        $('#authUrlDisplay').val(`${authUrl}?${params.toString()}`);
         UIService.showSection('authUrlSection');
 
         if (grantType !== 'implicit') {
             UIService.showSection('authCodeSection');
         }
 
-        UIService.showNotification('Authorization URL generated! Copy and visit the URL to get authorization code.', 'success');
+        UIService.showNotification('Authorization URL generated. Copy and visit the URL to get authorization code.', 'info');
     },
 
     async getTokenDirectly() {
-        const grantType = document.getElementById('grantType').value;
-        const scope = document.getElementById('scope')?.value;
+        const grantType = $('#grantType').val();
+        const scope = $('#scope').val();
 
         await Utils.delay(1000);
 
@@ -152,7 +189,7 @@ const OAuth2Service = {
     },
 
     async exchangeCode() {
-        const authCode = document.getElementById('authCodeInput').value;
+        const authCode = $('#authCodeInput').val();
         if (!authCode) {
             UIService.showNotification('Please enter the authorization code', 'warning');
             return;
@@ -163,7 +200,7 @@ const OAuth2Service = {
         try {
             await Utils.delay(1000);
 
-            const scope = document.getElementById('scope')?.value;
+            const scope = $('#scope').val();
             const mockToken = {
                 access_token: Utils.generateMockJWT(),
                 token_type: 'Bearer',
@@ -219,7 +256,7 @@ const OAuth2Service = {
     },
 
     async refreshToken() {
-        const refreshToken = this.tokens.refresh_token || document.getElementById('refreshToken')?.value;
+        const refreshToken = this.tokens.refresh_token || $('#refreshToken').val();
         if (!refreshToken) {
             UIService.showNotification('No refresh token available', 'warning');
             return;
@@ -248,15 +285,44 @@ const OAuth2Service = {
         }
     },
 
+    getAuthorizationCode() {
+        // $('#copyAuthUrlBtn').on('click', (e) => {});
+
+        const authUrl = $('#authUrlDisplay').val();
+        if (!authUrl) {
+            UIService.showNotification('Authorization URL is not generated yet', 'warning');
+            return;
+        }
+
+        window.location.href = authUrl;
+    },
+
     displayTokenResponse(token) {
         UIService.displayJSON('tokenDisplay', token);
         UIService.showSection('tokenSection');
     },
 
+    generateState() {
+        const state = Utils.generateRandomString(32);
+
+        StorageService.saveInStorage("state", state, sessionStorage);
+        console.log(`state generado: ${state}`);
+        return state;
+    },
+
+    isValidTheState(returnedState) {
+        const savedState = StorageService.getFromStorage("state", sessionStorage);
+        const savedStateStr = typeof savedState === "string" ? savedState : JSON.stringify(savedState);
+        console.log(`state guardado: ${savedState}`);
+        return savedStateStr === returnedState;
+    },
+
     reset() {
         UIService.showModal('Are you sure you want to reset all data?', () => {
             StorageService.clear();
-            location.reload();
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = window.location.origin + window.location.pathname;
         });
     }
 };

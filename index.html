@@ -33,18 +33,18 @@
             </div>
 
             <div class="form-content space-y-2 p-5 flex-1 overflow-y-auto">
-                <div>
-                    <label for="baseUrl" class="block text-slate-700 text-sm font-semibold mb-2">
-                        Base URL
-                    </label>
-                    <div class="flex">
-                        <input type="url" id="baseUrl" class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                               placeholder="https://auth.example.com">
-                        <button id="syncUrls" class="min-w-[5.2rem] bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">
-                            Sync
-                        </button>
-                    </div>
-                </div>
+                <!--                <div>-->
+                <!--                    <label for="baseUrl" class="block text-slate-700 text-sm font-semibold mb-2">-->
+                <!--                        Base URL-->
+                <!--                    </label>-->
+                <!--                    <div class="flex">-->
+                <!--                        <input type="url" id="baseUrl" class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"-->
+                <!--                               placeholder="https://auth.example.com">-->
+                <!--                        <button id="syncUrls" class="min-w-[5.2rem] bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">-->
+                <!--                            Sync-->
+                <!--                        </button>-->
+                <!--                    </div>-->
+                <!--                </div>-->
                 <div>
                     <label for="discoveryUrl" class="block text-slate-700 text-sm font-semibold mb-2">
                         Discovery Endpoint
@@ -121,6 +121,7 @@
                         <label for="redirectUri" class="block text-slate-700 text-sm font-semibold mb-2">
                             Redirect URI
                         </label>
+                        <!--                        TODO: hacer el que el redirecturi por defecto sea el mismo sitio este-->
                         <input type="url" id="redirectUri"
                                class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
                                placeholder="https://myapp.prod.com/auth/callback">
@@ -193,6 +194,14 @@
                                    placeholder="••••••••••••">
                         </div>
                     </div>
+                    <div id="authCodeSection" class="hidden">
+                        <h3 class="text-base font-medium text-slate-800 mb-1">Authorization Code</h3>
+                        <div class="relative">
+                            <input type="text" id="authCodeInput"
+                                   class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex flex-wrap gap-2 pt-4 border-t border-slate-200">
@@ -200,10 +209,10 @@
                             class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">
                         Start Auth
                     </button>
-<!--                    <button id="clearCookiesBtn"-->
-<!--                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">-->
-<!--                        Clear-->
-<!--                    </button>-->
+                    <!--                    <button id="clearCookiesBtn"-->
+                    <!--                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 font-semibold transition-colors">-->
+                    <!--                        Clear-->
+                    <!--                    </button>-->
                     <button id="exchangeCodeBtn"
                             class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 font-semibold transition-colors hidden">
                         Exchange
@@ -233,63 +242,64 @@
                 </h2>
             </div>
 
+
             <div class="p-4 space-y-4 flex-1 overflow-y-auto">
                 <div>
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Current Configuration</h3>
+                    <h3 class="text-base font-medium text-slate-800 mb-1">Current Configuration</h3>
                     <div class="bg-slate-50 border border-slate-200 p-3 space-y-2 text-sm">
                         <div class="flex justify-between">
-                            <span class="font-semibold text-slate-700">Grant Type:</span>
+                            <span class="font-medium text-slate-700">Grant Type:</span>
                             <span id="configGrantType" class="text-slate-600">Not selected</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="font-semibold text-slate-700">Client ID:</span>
+                            <span class="font-medium text-slate-700">Client ID:</span>
                             <span id="configClientId" class="text-slate-600">Not set</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="font-semibold text-slate-700">Auth Endpoint:</span>
+                            <span class="font-medium text-slate-700">Auth Endpoint:</span>
                             <span id="configAuthUrl" class="text-slate-600 text-xs break-all">Not set</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="font-semibold text-slate-700">Token Endpoint:</span>
+                            <span class="font-medium text-slate-700">Token Endpoint:</span>
                             <span id="configTokenUrl" class="text-slate-600 text-xs break-all">Not set</span>
                         </div>
                     </div>
                 </div>
 
                 <div id="authUrlSection" class="hidden">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Authorization URL</h3>
+                    <h3 class="text-base font-medium text-slate-800 mb-1">Authorization URL</h3>
                     <div class="space-y-2">
+                        <div class="relative group">
                         <textarea id="authUrlDisplay" readonly
-                                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 text-xs font-mono"
-                                rows="4"></textarea>
-                        <button id="copyAuthUrlBtn"
-                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm font-semibold transition-colors">
-                            Copy URL
-                        </button>
+                                  class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono text-xs focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 cursor-pointer transition-all"
+                                  rows="4">
+                        </textarea>
+                            <button id="getAuthCodeBtn"
+                                    class="absolute top-1/2 right-6 transform -translate-y-1/2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 text-xs font-medium transition-all duration-200 rounded-md shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
+                                GET
+                            </button>
+                        </div>
                     </div>
                 </div>
-
-                <div id="authCodeSection" class="hidden">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Authorization Code</h3>
-                    <input type="text" id="authCodeInput"
-                           class="w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-                           placeholder="Paste authorization code here">
-                </div>
-
-                <div id="tokenSection" class="hidden">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Token Response</h3>
-                    <div id="tokenDisplay"
-                         class="json-display bg-slate-50 border border-slate-300 p-3 text-slate-700 font-mono text-xs overflow-auto max-h-48"></div>
-                </div>
-
-                <div id="userInfoSection" class="hidden">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">UserInfo Response</h3>
-                    <div id="userInfoDisplay"
-                         class="json-display bg-slate-50 border border-slate-300 p-3 text-slate-700 font-mono text-xs overflow-auto max-h-48"></div>
-                </div>
             </div>
+
+
+        </div>
+
+        <div id="tokenSection" class="hidden">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4">Token Response</h3>
+            <div id="tokenDisplay"
+                 class="json-display bg-slate-50 border border-slate-300 p-3 text-slate-700 font-mono text-xs overflow-auto max-h-48"></div>
+        </div>
+
+        <div id="userInfoSection" class="hidden">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4">UserInfo Response</h3>
+            <div id="userInfoDisplay"
+                 class="json-display bg-slate-50 border border-slate-300 p-3 text-slate-700 font-mono text-xs overflow-auto max-h-48"></div>
         </div>
     </div>
+</div>
+</div>
 </div>
 
 <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
@@ -316,11 +326,13 @@
 
 <div id="notifications" class="fixed top-4 right-4 space-y-2 z-40 font-mono"></div>
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/storage-service.js"></script>
 <script src="assets/js/ui-service.js"></script>
 <script src="assets/js/oauth2-service.js"></script>
+<script src="assets/js/callback-service.js"></script>
 <script src="assets/js/main.js"></script>
 </body>
 </html>

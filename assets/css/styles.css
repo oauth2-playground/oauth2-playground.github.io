@@ -77,22 +77,22 @@
     padding: 1rem;
 }
 
-.form-content::-webkit-scrollbar {
+*::-webkit-scrollbar {
     width: 12px;
 }
 
-.form-content::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
     background: #f1f5f9;
     border-radius: 0;
 }
 
-.form-content::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
     background: white;
     border-radius: 0;
     border: 1px solid #e2e8f0;
 }
 
-.form-content::-webkit-scrollbar-thumb:hover {
+*::-webkit-scrollbar-thumb:hover {
     background: #e2e8f0;
 }
 

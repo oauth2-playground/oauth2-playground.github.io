@@ -119,7 +119,9 @@ const UIService = {
         $('#configTokenUrl').text($tokenUrl);
     },
 
-    generateAndSetPKCE(forceRegeneration) {
+    async generateAndSetPKCE(forceRegeneration) {
+        const PKCE_VALUES = "pkce_values";
+
         const $methodSelect = $('#codeChallengeMethod');
         const method = $methodSelect.length ? $methodSelect.val() : 'S256';
 
@@ -127,9 +129,17 @@ const UIService = {
         const $challengeInput = $('#codeChallenge');
 
         if ($verifierInput.val() !== "" && !forceRegeneration) {
-            $challengeInput.val(Utils.generateCodeChallenge($verifierInput.val(), method));
+            const codeChallenge = await Utils.generateCodeChallenge($verifierInput.val(), method);
+            const codeVerifier = $verifierInput.val();
+
+            // StorageService.saveInStorage(PKCE_VALUES, `${codeVerifier}|${codeChallenge}|${method}`, sessionStorage);
+
+            $challengeInput.val(codeChallenge);
+
         } else {
             const pkce = Utils.generatePKCEPairs(method);
+
+            // StorageService.saveInStorage(PKCE_VALUES, `${pkce.codeVerifier}|${pkce.codeChallenge}|${method}`, sessionStorage);
 
             if ($verifierInput.length) $verifierInput.val(pkce.codeVerifier);
             if ($challengeInput.length) $challengeInput.val(pkce.codeChallenge);
@@ -165,7 +175,7 @@ const UIService = {
             const fieldsToShow = grantTypeFields[grantType];
             fieldsToShow.forEach(fieldId => {
                 const $fieldElement = getElementWithFieldId(fieldId);
-                console.log($fieldElement);
+
                 if ($fieldElement && $fieldElement.length > 0) {
                     $fieldElement.removeClass("hidden");
                     const $redirectUri = $("#redirectUri");
@@ -233,10 +243,21 @@ const UIService = {
             }
         });
 
-        const authCodeInput = document.getElementById('authCodeInput');
-        if (authCodeInput) {
-            authCodeInput.addEventListener('input', () => {
-                const code = authCodeInput.value;
+        // const authCodeInput = document.getElementById('authCodeInput');
+        // if (authCodeInput) {
+        //     authCodeInput.addEventListener('input', () => {
+        //         const code = authCodeInput.value;
+        //         if (code) {
+        //             this.showButton('exchangeCodeBtn');
+        //         } else {
+        //             this.hideButton('exchangeCodeBtn');
+        //         }
+        //     });
+        // }
+        const $authCodeInput = $('#authCodeInput');
+        if ($authCodeInput.length) {
+            $authCodeInput.on('input', () => {
+                const code = $authCodeInput.val();
                 if (code) {
                     this.showButton('exchangeCodeBtn');
                 } else {
@@ -246,7 +267,7 @@ const UIService = {
         }
     },
 
-    async handleAuthUrlClick(e) {
+    async copyAuthorizationURLOnClick(e) {
         const authUrlDisplay = e.target;
         if (e.button === 0) {
             authUrlDisplay.select();

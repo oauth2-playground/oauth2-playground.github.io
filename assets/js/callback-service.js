@@ -8,33 +8,32 @@ const CallbackService = {
 
         if (error) {
             const errorMsg = `Error: ${errorDescription || 'unknown, occurred during authorization'}`;
-            UIService.showNotification("error", errorMsg);
+            UIService.showNotification(errorMsg, "error");
             return;
         }
 
         if (code) {
-            UIService.showNotification("success", `Authorization code received: ${code}`);
-            document.getElementById('authCodeInput').value = code;
-            if (state && OAuth2Service.isValidTheState(state)) {
-                // document.getElementById('authState').value = state;
-                // StorageService.saveInStorage('authState', state);
+            const $authCodeInput = $('#authCodeInput');
 
+            UIService.showNotification(`Authorization code received: ${code}`, "success");
+
+            if (state && OAuth2Service.isValidTheState(state)) {
                 UIService.showButton('exchangeAuthCodeBtn');
-                // document.getElementById('exchangeAuthCodeBtn').disabled = true;
+                $authCodeInput.val(code);
+
             } else {
                 const cleanUrl = window.location.origin + window.location.pathname;
                 window.history.replaceState({}, document.title, cleanUrl);
 
-                UIService.showNotification("error", `The received state isn't valid`);
+                UIService.showNotification(`The received state isn't valid`, "error");
 
-                document.getElementById('authCodeInput').value = '';
-                // document.getElementById('authState').value = '';
+                $authCodeInput.val('');
 
                 return;
             }
 
             UIService.updateVisualization();
-
         }
+        window.location.href='index.html';
     }
 }

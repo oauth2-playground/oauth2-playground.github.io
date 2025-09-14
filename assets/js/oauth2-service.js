@@ -102,7 +102,7 @@ const OAuth2Service = {
         UIService.showLoading('startAuthBtn');
 
         try {
-            await Utils.delay(500);
+            // await Utils.delay(500);
 
             if (grantType === 'client_credentials' || grantType === 'password') {
                 await this.getTokenDirectly();
@@ -110,8 +110,10 @@ const OAuth2Service = {
                 await this.refreshToken();
             } else {
                 this.generateAuthorizationUrl();
-                $('#authUrlDisplay').off('click').on('click', (e) => UIService.handleAuthUrlClick(e));
+                $('#authUrlDisplay').off('click').on('click', (e) => UIService.copyAuthorizationURLOnClick(e));
                 $('#getAuthCodeBtn').off('click').on('click', (e) => this.getAuthorizationCode());
+
+
             }
         } catch (error) {
             UIService.showNotification('Authorization failed: ' + error.message, 'error');
@@ -126,7 +128,7 @@ const OAuth2Service = {
         const authUrl = $('#authorizationUrl').val();
         const scope = $('#scope').val();
         const redirectUri = $('#redirectUri').val();
-        const state = Utils.generateRandomString(32);
+        const state = this.generateState();
 
         if (!authUrl || !redirectUri) {
             UIService.showNotification('Authorization URL and Redirect URI are required', 'warning');
@@ -138,19 +140,24 @@ const OAuth2Service = {
             client_id: clientId,
             redirect_uri: redirectUri,
             scope: scope || 'openid profile email',
-            state: this.generateState()
+            state: state
         });
 
         if (grantType === 'authorization_code_pkce') {
+            const codeVerifier = $('#codeVerifier').val();
             const codeChallenge = $('#codeChallenge').val();
             const codeChallengeMethod = $('#codeChallengeMethod').val();
             if (codeChallenge && codeChallengeMethod) {
                 params.append('code_challenge', codeChallenge);
                 params.append('code_challenge_method', codeChallengeMethod);
+
+                // sessionStorage.setItem('pkce_values', codeVerifier);
+                // StorageService.saveInStorage('pkce_values', `${codeVerifier}|${codeChallenge}|${codeChallengeMethod}`, sessionStorage);
             }
         }
 
-        $('#authUrlDisplay').val(`${authUrl}?${params.toString()}`);
+        $('#authUrlDisplay').val(
+            `${authUrl}?${params.toString()}`);
         UIService.showSection('authUrlSection');
 
         if (grantType !== 'implicit') {
@@ -197,30 +204,52 @@ const OAuth2Service = {
 
         UIService.showLoading('exchangeCodeBtn');
 
-        try {
-            await Utils.delay(1000);
+        // const pkce = sessionStorage.getItem('verifier_code')
 
-            const scope = $('#scope').val();
-            const mockToken = {
-                access_token: Utils.generateMockJWT(),
-                token_type: 'Bearer',
-                expires_in: 3600,
-                refresh_token: Utils.generateMockJWT(),
-                id_token: Utils.generateMockJWT(),
-                scope: scope || 'openid profile email'
-            };
+        const codeVerifier =sessionStorage.getItem('flow_code_verifier');
+        console.log(codeVerifier)
 
-            this.tokens = mockToken;
-            this.displayTokenResponse(mockToken);
-            UIService.showNotification('Code exchanged successfully!', 'success');
 
-            UIService.showButton('getUserInfoBtn');
-            UIService.showButton('refreshTokenBtn');
-        } catch (error) {
-            UIService.showNotification('Code exchange failed: ' + error.message, 'error');
-        } finally {
+        console.log(codeVerifier);
+        if (!codeVerifier) {
+            UIService.showNotification('PKCE code verifier not found in session storage', 'error');
             UIService.hideLoading('exchangeCodeBtn');
+            return;
+
         }
+
+        $.ajax({
+            url: $('#tokenUrl').val(),
+            method: 'POST',
+            data: $.param({
+                grant_type: 'authorization_code',
+                code: authCode,
+                redirect_uri: $('#redirectUri').val(),
+                code_verifier: codeVerifier,
+                client_id: $('#clientId').val()
+            }),
+            contentType: 'application/x-www-form-urlencoded',
+            success: (response) => {
+                console.log(response);
+                // console.log(response.json.access_token);
+                this.displayTokenResponse(response.access_token);
+                UIService.showNotification('Code exchanged successfully!', 'success');
+                UIService.showButton('getUserInfoBtn');
+                UIService.showButton('refreshTokenBtn');
+            },
+            error: function(response) {
+                const errorMsg = response.responseJSON
+                    ? JSON.stringify(response.responseJSON)
+                    : response.responseText || 'Unknown error';
+                UIService.showNotification('Code exchange failed: ' + errorMsg, 'error');
+            },
+        });
+        UIService.hideLoading('exchangeCodeBtn');
+
+    },
+
+    decodeToken(jwt) {
+
     },
 
     async getUserInfo() {
@@ -293,6 +322,15 @@ const OAuth2Service = {
             UIService.showNotification('Authorization URL is not generated yet', 'warning');
             return;
         }
+
+        sessionStorage.setItem('flow_code_verifier', $('#codeVerifier').val());
+        sessionStorage.setItem('flow_grant_type', $('#grantType').val());
+        sessionStorage.setItem('flow_client_secret', $('#clientSecret').val());
+        sessionStorage.setItem('flow_client_id', $('#clientId').val());
+        sessionStorage.setItem('flow_redirect_uri', $('#redirectUri').val());
+        sessionStorage.setItem('flow_token_url', $('#tokenUrl').val());
+        // sessionStorage.setItem('verifier_code', $('#codeVerifier').val());
+        // StorageService.saveInStorage('verifier_code', $('#codeVerifier').val(), sessionStorage);
 
         window.location.href = authUrl;
     },

@@ -1,20 +1,11 @@
 const Utils = {
-    extractDomainFromUrl(url) {
-        try {
-            const urlObj = new URL(url);
-            return `${urlObj.protocol}//${urlObj.host}`;
-        } catch (error) {
-            return '';
-        }
-    },
-
     generateRandomString(length) {
         let rand = new Uint8Array(length);
         crypto.getRandomValues(rand);
         return new CryptoJS.lib.WordArray.init(rand).toString();
     },
 
-    base64URL(string) {
+    base64URLEncode(string) {
         return string
             .toString(CryptoJS.enc.Base64)
             .replace(/=/g, '')
@@ -29,12 +20,12 @@ const Utils = {
     },
 
     generateCodeVerifier(bytes) {
-        return this.base64URL(this.generateRandomString(bytes))
+        return this.base64URLEncode(this.generateRandomString(bytes))
     },
 
     generateCodeChallenge(codeVerifier, method) {
         return method === 'S256' ?
-            this.base64URL(CryptoJS.SHA256(codeVerifier)) : codeVerifier;
+            this.base64URLEncode(CryptoJS.SHA256(codeVerifier)) : codeVerifier;
     },
 
     generateMockJWT() {
@@ -68,41 +59,5 @@ const Utils = {
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
-    },
-
-    buildFullUrl(baseUrl, endpoint) {
-        if (!baseUrl) return '';
-
-        try {
-            const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-            const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-            return base + path;
-        } catch (error) {
-            return '';
-        }
-    },
-
-    extractEndpoint(fullUrl, baseUrl) {
-        if (!fullUrl || !baseUrl) return '';
-
-        try {
-            const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-            if (fullUrl.startsWith(base)) {
-                return fullUrl.substring(base.length);
-            }
-            return '';
-        } catch (error) {
-            return '';
-        }
-    },
-
-    getDefaultEndpoints() {
-        return {
-            discoveryUrl: '/.well-known/openid-configuration',
-            authorizationUrl: '/oauth2/authorize',
-            tokenUrl: '/oauth2/token',
-            userinfoUrl: '/userinfo',
-            revocationUrl: '/oauth2/revoke'
-        };
     }
 };

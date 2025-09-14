@@ -4,7 +4,7 @@ class OAuth2Playground {
     }
 
     init() {
-        CallbackService.handleCallbackCode();
+        // CallbackService.handleCallbackCode();
 
         this.bindEvents();
         UIService.fillFieldsFromCache();

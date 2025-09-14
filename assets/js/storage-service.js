@@ -49,6 +49,14 @@ const StorageService = {
         }
     },
 
+    removeFromStorage(key, storage = localStorage) {
+        try {
+            storage.removeItem(this.STORAGE_KEY);
+        } catch (error) {
+            //ignore
+        }
+    },
+
     saveFormData() {
         const data = {
             grantType: document.getElementById("grantType")?.value || '',

@@ -2,35 +2,323 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Callback</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="assets/css/styles.css">
 </head>
-<body>
-    <script>
-        (function() {
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get('code');
-            const state = params.get('state');
-            const error = params.get('error');
+<body class="bg-slate-50 text-slate-700 font-mono min-h-screen flex items-center justify-center p-4">
 
-            const message = { type: 'oauth2_callback', state: state };
 
-            if (code) {
-                console.log(message);
-                message.code = code;
+<div class="w-full max-w-6xl mx-auto bg-white border border-slate-200 shadow-lg p-6">
 
-                window.location.href = `/?code=${code}&state=${state}`;
+    <div class="border-b border-slate-200 pb-4 mb-6">
+        <h1 class="text-2xl font-bold text-slate-800 flex items-center">
+            <span class="mr-2 text-blue-500"></span>
+            OAuth2 Playground
+        </h1>
+        <p class="text-slate-600 text-sm mt-1">
+            Test OAuth2 flows interactively without data tracking nor credentials storing
+        </p>
+    </div>
 
-                return;
-            } else if (error) {
-                message.error = error;
-                message.error_description = params.get('error_description');
-                window.location.href = `/?error=${error}&error_description=${message.error_description}&state=${state}`;
+    <div class="grid gap-6 h-[68vh]">
+        <div class="border border-slate-200 bg-white form-container flex flex-col">
+            <div class="bg-blue-50 border-b border-slate-200 p-3 flex-shrink-0">
+                <h2 class="text-lg font-semibold text-slate-800 flex items-center">
+                    <span class="mr-2 text-blue-500">></span>
+                    Callback Configuration
+                </h2>
+            </div>
 
-                return;
+            <div class="form-content p-6 flex-1 overflow-y-auto">
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide border-b border-slate-200 pb-2">
+                        OAuth Configuration
+                    </h3>
+
+                    <div class="space-y-3">
+                        <div class="flex gap-4">
+                            <div class="flex-1">
+                                <label for="clientId" class="block text-slate-700 text-xs font-semibold mb-1">
+                                    Client ID
+                                </label>
+                                <input type="text" id="clientId" readonly
+                                       class="w-full px-3 py-1 bg-gray-100 border border-slate-300 text-slate-600 font-mono select-none focus:outline-none h-[34px] rounded-sm"
+                                       placeholder="your-client-id">
+                            </div>
+
+                            <div class="flex-1">
+                                <div class="hidden">
+                                    <label for="clientSecret" class="block text-slate-700 text-xs font-semibold mb-1">
+                                        Client Secret
+                                    </label>
+<!--                                    <input type="text" id="clientSecret" readonly-->
+<!--                                           class="w-full px-3 py-1 bg-gray-100 border border-slate-300 text-slate-600 font-mono select-none focus:outline-none h-[34px] rounded-sm"-->
+<!--                                           placeholder="your-client-secret">-->
+                                    <input type="text" id="clientSecret"
+                                           class="w-full px-3 py-1 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 h-[34px] rounded-sm"
+                                           placeholder="your-client-secret">
+                                </div>
+
+                                <div class="">
+                                    <label for="codeVerifier" class="block text-slate-700 text-xs font-semibold mb-1">
+                                        Code Verifier
+                                    </label>
+                                    <input type="text" id="codeVerifier" readonly
+                                           class="w-full px-3 py-1 bg-gray-100 border border-slate-300 text-slate-600 font-mono select-none focus:outline-none h-[34px] rounded-sm"
+                                           placeholder="randomly-generated-code">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="">
+                            <label for="tokenUrl" class="block text-slate-700 text-xs font-semibold mb-1">
+                                Token URL
+                            </label>
+                            <input type="url" id="tokenUrl"
+                                   class="w-full px-3 py-1 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 rounded-sm"
+                                   placeholder="https://auth.example.com/oauth2/token">
+                        </div>
+
+                        <div class="">
+                            <label for="redirectUri" class="block text-slate-700 text-xs font-semibold mb-1">
+                                Redirect URI
+                            </label>
+                            <input type="url" id="redirectUri"
+                                   class="w-full px-3 py-1 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 rounded-sm"
+                                   placeholder="https://myapp.prod.com/auth/callback">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="authCodeSection" class="mb-6">
+                    <h3 class="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide border-b border-slate-200 pb-2">
+                        Authorization Code
+                    </h3>
+
+                    <div class="relative">
+                        <input type="text" id="authCodeInput"
+                               class="w-full px-3 py-1 bg-white border border-slate-300 text-slate-700 font-mono text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 rounded-sm"
+                               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6 border-t border-slate-200">
+                    <div class="flex justify-between items-center">
+                        <button id="returnBtn"
+                                class="px-6 py-2 bg-slate-500 hover:bg-slate-600 text-white text-sm font-semibold rounded-sm transition-colors duration-200 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
+                            Return
+                        </button>
+
+                        <button id="exchangeCodeBtn"
+                                class="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-sm transition-colors duration-200 flex items-center">
+                            Exchange Code
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white border border-slate-300 shadow-xl max-w-md w-full mx-4">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <span class="mr-3 text-xl">⚠</span>
+                <h3 class="text-lg font-semibold text-slate-800">Confirm Action</h3>
+            </div>
+            <p id="modalMessage" class="text-slate-600 mb-6 font-mono">Are you sure you want to proceed?</p>
+            <div class="flex justify-end space-x-2">
+                <button id="modalCancel"
+                        class="px-4 py-2 text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 font-semibold transition-colors">
+                    Cancel
+                </button>
+                <button id="modalConfirm"
+                        class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white border border-red-500 font-semibold transition-colors">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="notifications" class="fixed top-4 right-4 space-y-2 z-40 font-mono"></div>
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+
+<!--<script src="assets/js/utils.js"></script>-->
+<script src="assets/js/storage-service.js"></script>
+<script src="assets/js/ui-service.js"></script>
+<script src="assets/js/oauth2-service.js"></script>
+<!--<script src="assets/js/callback-service.js"></script>-->
+<!--<script src="assets/js/main.js"></script>-->
+
+<script>
+    const grantType = sessionStorage.getItem("flow_grant_type");
+    console.log("grantType: ", grantType);
+    if (grantType !== "authorization_code" && grantType !== "authorization_code_pkce") {
+        window.location.href = 'index.html';
+    }
+    const isPKCE = grantType === "authorization_code_pkce";
+
+    const clientId = sessionStorage.getItem("flow_client_id");
+    const clientSecret = !isPKCE ? sessionStorage.getItem("flow_client_secret") : undefined;
+    const codeVerifier = isPKCE ? sessionStorage.getItem("flow_code_verifier") : undefined;
+    const tokenUrl = sessionStorage.getItem("flow_token_url") || '';
+    const redirectUri = sessionStorage.getItem("flow_redirect_uri") || '';
+
+    const toggleVisibilityBetweenClientSecretAndCodeVerifier = (isPKCE) => {
+        if (isPKCE) {
+            $('#clientSecret').closest('div').addClass('hidden');
+            $('#codeVerifier').closest('div').removeClass('hidden');
+        } else {
+            $('#codeVerifier').closest('div').addClass('hidden');
+            $('#clientSecret').closest('div').removeClass('hidden');
+        }
+    };
+
+    const returnToIndex = () => {
+        window.location.href = 'index.html' ;
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const error = urlParams.get('error');
+    const errorDescription = urlParams.get('error_description');
+
+    if (!code || !state) {
+        UIService.showNotification("No authorization code or state found in the URL", "error");
+        // Utils.delay(2000).then(() => returnToIndex()); //todo; activar
+    }
+
+    if (error) {
+        const errorMsg = `Error: ${errorDescription || 'something occurred during authorization'}`;
+        UIService.showNotification(errorMsg, "error");
+        Utils.delay(2000).then(() => returnToIndex());
+    }
+
+    // if (code) {
+    const $authCodeInput = $('#authCodeInput');
+
+    // UIService.showNotification(`Authorization code received: ${code}`, "success");
+
+    if (state && OAuth2Service.isValidTheState(state)) {
+        // console.log(state);
+        console.log(state)
+        $authCodeInput.val(code);
+
+        const cleanUrl = window.location.origin + window.location.pathname;
+        // window.history.replaceState({}, document.title, cleanUrl);
+
+
+        // UIService.showNotification(`The received state isn't valid`, "error");
+        $('#clientId').val(clientId);
+        isPKCE? $('#codeVerifier').val(codeVerifier) : $('#clientSecret').val(clientSecret);
+        $('#tokenUrl').val(tokenUrl);
+        $('#redirectUri').val(redirectUri);
+
+
+        // const clientId = sessionStorage.getItem("flow_client_id");
+        // const clientSecret = isPKCE? sessionStorage.getItem("flow_client_secret") : undefined;
+        // const codeVerifier = !isPKCE? sessionStorage.getItem("flow_code_verifier"): undefined;
+        // const tokenUrl = sessionStorage.getItem("flow_token_url") || '';
+        // const redirectUri = sessionStorage.getItem("flow_redirect_uri") || '';
+
+
+        // UIService.updateVisualization();
+
+    } else {
+        UIService.showNotification(`The received state isn't valid`, "error");
+        Utils.delay(2000).then(() => returnToIndex());
+    }
+
+    function toggleExchangeButton(isPKCE) {
+        const tokenUrl = $('#tokenUrl').val().trim();
+        const redirectUri = $('#redirectUri').val().trim();
+        const authCode = $authCodeInput.val().trim();
+        const clientSecret = $('#clientSecret').val().trim();
+
+        const $exchangeBtn = $('#exchangeCodeBtn');
+
+        if (tokenUrl && redirectUri && authCode && (isPKCE || clientSecret)) {
+            console.log("enabling exchange button");
+
+            $exchangeBtn
+                .prop('disabled', false)
+                .removeClass('bg-gray-300 text-gray-500 cursor-not-allowed')
+                .addClass('bg-emerald-500 hover:bg-emerald-600 text-white cursor-pointer');
+        } else {
+            console.log("Disabling exchange button");
+            $exchangeBtn
+                .prop('disabled', true)
+                .removeClass('bg-emerald-500 hover:bg-emerald-600 text-white cursor-pointer')
+                .addClass('bg-gray-300 text-gray-500 cursor-not-allowed');
+        }
+    }
+
+
+    $(document).ready(() => {
+        toggleExchangeButton(isPKCE);
+        toggleVisibilityBetweenClientSecretAndCodeVerifier(isPKCE);
+
+    });
+    $('#tokenUrl, #redirectUri, #authCodeInput #clientSecret').on('input keyup change paste', () => toggleExchangeButton(isPKCE));
+    $('#returnBtn').on('click', () => returnToIndex());
+    $('#exchangeCodeBtn').on('click', () => {
+        const authCode = $authCodeInput.val().trim();
+        UIService.showLoading('exchangeCodeBtn');
+
+        const payloadCommons = {
+            grant_type: 'authorization_code',
+            code: authCode,
+            redirect_uri: redirectUri,
+            client_id: clientId
+        };
+        const payload = isPKCE? {
+            ...payloadCommons,
+            code_verifier: codeVerifier
+        } : {
+            ...payloadCommons,
+            client_secret: clientSecret
+        };
+
+        $.ajax({
+            url: tokenUrl,
+            method: 'POST',
+            contentType: 'application/x-www-form-urlencoded',
+            data: $.param(payload),
+            success: (res) => {
+                console.log(res);
+                // this.displayTokenResponse(res.access_toke)
+                UIService.showNotification('Code Exchanged Successfully', 'success');
+
+            },
+            error: (err) => {
+                console.error(err);
+                const errorMsg = err.responseJSON?.error_description || err.statusText || 'unknown error';
+                UIService.showNotification(`Error exchanging code: ${errorMsg}`, 'error');
+            },
+            complete: () => {
+                UIService.hideLoading('exchangeCodeBtn', 'Exchange Code');
             }
+        });
+        //todo: implementar el cambio de token
+    });
 
-            window.location.href='/index.html'
-        })();
-    </script>
+</script>
 </body>
 </html>

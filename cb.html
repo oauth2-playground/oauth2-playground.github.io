@@ -139,11 +139,11 @@
             <p id="modalMessage" class="text-slate-600 mb-6 font-mono">Are you sure you want to proceed?</p>
             <div class="flex justify-end space-x-2">
                 <button id="modalCancel"
-                        class="px-4 py-2 text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 font-semibold transition-colors">
+                        class="px-4 py-1 text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 font-semibold transition-colors h-[34px]">
                     Cancel
                 </button>
                 <button id="modalConfirm"
-                        class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white border border-red-500 font-semibold transition-colors">
+                        class="px-4 py-1 bg-red-500 hover:bg-red-600 text-white border border-red-500 font-semibold transition-colors h-[34px]">
                     Confirm
                 </button>
             </div>
@@ -270,11 +270,9 @@
         }
     }
 
-
     $(document).ready(() => {
         toggleExchangeButton(isPKCE);
         toggleVisibilityBetweenClientSecretAndCodeVerifier(isPKCE);
-
     });
     $('#tokenUrl, #redirectUri, #authCodeInput #clientSecret').on('input keyup change paste', () => toggleExchangeButton(isPKCE));
     $('#returnBtn').on('click', () => returnToIndex());
@@ -306,6 +304,10 @@
                 // this.displayTokenResponse(res.access_toke)
                 UIService.showNotification('Code Exchanged Successfully', 'success');
 
+                sessionStorage.setItem('token_response', JSON.stringify(res));
+                // Utils.delay(200).then(() => {
+                window.location.href = 'results.html';
+                // });
             },
             error: (err) => {
                 console.error(err);
@@ -316,7 +318,6 @@
                 UIService.hideLoading('exchangeCodeBtn', 'Exchange Code');
             }
         });
-        //todo: implementar el cambio de token
     });
 
 </script>

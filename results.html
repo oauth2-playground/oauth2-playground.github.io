@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth2 Results - Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="bg-slate-50 text-slate-700 font-mono min-h-screen flex items-center justify-center p-4">
+
+<div class="w-full max-w-6xl mx-auto bg-white border border-slate-200 shadow-lg p-6">
+
+    <div class="border-b border-slate-200 pb-4 mb-6">
+        <h1 class="text-2xl font-bold text-slate-800 flex items-center">
+            Authentication Results
+        </h1>
+        <p class="text-slate-600 text-sm mt-1">
+            Token analysis and authentication details
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[68vh]">
+
+        <div class="border border-slate-200 bg-white flex flex-col min-h-0">
+            <div class="bg-blue-50 border-b border-slate-200 p-3 flex-shrink-0">
+                <h2 class="text-lg font-semibold text-slate-800 flex items-center">
+                    <span class="mr-2 text-blue-500">§</span>
+                    Token Information
+                </h2>
+            </div>
+
+            <div class="space-y-5 p-5 flex-1 overflow-y-auto">
+
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">Access Token</h3>
+                        <button id="refreshAccessTokenBtn" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-700 px-2 py-1 rounded transition-colors">
+                            Refresh
+                        </button>
+                    </div>
+                    <textarea id="accessTokenDisplay" readonly
+                              class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 font-mono text-xs focus:outline-none cursor-text select-all"
+                    ></textarea>
+                </div>
+
+                <div id="refreshTokenSection">
+                    <h3 class="text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b border-slate-200 pb-1">
+                        Refresh Token
+                    </h3>
+                    <textarea id="refreshTokenDisplay" readonly
+                              class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 font-mono text-xs focus:outline-none cursor-text select-all"
+                              rows="2">rt_1234567890abcdefghijklmnopqrstuvwxyz</textarea>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b border-slate-200 pb-1">
+                        Token Analysis
+                    </h3>
+                    <div class="bg-slate-50 border border-slate-200 p-3 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="font-medium text-slate-700">Type:</span>
+                            <span id="tokenType" class="text-green-600 font-semibold">JWT</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium text-slate-700">Algorithm:</span>
+                            <span id="tokenAlgorithm" class="text-slate-600">RS256</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium text-slate-700">Valid:</span>
+                            <span id="tokenValid" class="text-green-600">✓ Valid</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium text-slate-700">Expires:</span>
+                            <span id="tokenExpiry" class="text-slate-600">2024-01-15 12:30:22 UTC</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b border-slate-200 pb-1">
+                        Token Metadata
+                    </h3>
+                    <div class="bg-slate-50 border border-slate-200 p-3 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="font-medium text-slate-700">Scope:</span>
+                            <span id="tokenScope" class="text-slate-600">openid profile email</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium text-slate-700">Token Type:</span>
+                            <span id="tokenTypeBearer" class="text-slate-600">Bearer</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium text-slate-700">Expires In:</span>
+                            <span id="tokenExpiresIn" class="text-slate-600">3600 seconds</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="border border-slate-200 bg-white flex flex-col min-h-0">
+            <div class="bg-blue-50 border-b border-slate-200 p-3 flex-shrink-0">
+                <h2 class="text-lg font-semibold text-slate-800 flex items-center">
+                    <span class="mr-2 text-blue-500">∞</span>
+                    Token Claims & Actions
+                </h2>
+            </div>
+
+            <div class="p-4 space-y-5 flex-1 overflow-y-auto">
+
+                <div>
+                    <h3 class="text-base font-medium text-slate-800 mb-2">Access Token (JWT)</h3>
+
+                    <div id="jwtHeaderSection" class="mb-4">
+                        <h4 class="text-sm font-semibold text-slate-700 mb-1">Header</h4>
+                        <div class="bg-slate-50 border border-slate-200 p-3">
+                            <pre id="jwtHeaderDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap">{
+  "alg": "RS256",
+  "typ": "JWT",
+  "kid": "123"
+}</pre>
+                        </div>
+                    </div>
+
+                    <div id="jwtPayloadSection" class="mb-4">
+                        <h4 class="text-sm font-semibold text-slate-700 mb-1">Payload (Claims)</h4>
+                        <div class="bg-slate-50 border border-slate-200 p-3">
+                            <pre id="jwtPayloadDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap">{
+  "sub": "1234567890",
+  "name": "John Doe",
+  "admin": true,
+  "iat": 1516239022,
+  "exp": 1516242622,
+  "aud": "my-client-id",
+  "iss": "https://auth.example.com",
+  "email": "john.doe@example.com",
+  "email_verified": true,
+  "preferred_username": "johndoe"
+}</pre>
+                        </div>
+                    </div>
+
+                    <div id="jwtSignatureSection">
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="text-sm font-semibold text-slate-700">Signature</h4>
+                            <button id="validateTokenBtn" class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition-colors">
+                                Validate
+                            </button>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 p-3">
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between">
+                                    <span class="font-medium text-slate-700">Status:</span>
+                                    <span class="text-green-600">✓ Verified</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="font-medium text-slate-700">Algorithm:</span>
+                                    <span class="text-slate-600">RS256</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="font-medium text-slate-700">Key ID:</span>
+                                    <span class="text-slate-600">123</span>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-slate-700 block mb-1">Raw Signature:</span>
+                                    <textarea readonly class="w-full px-2 py-1 bg-white border border-slate-300 text-slate-600 font-mono text-xs resize-none" rows="2">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="rawTokenDisplay" class="hidden">
+                    <h3 class="text-base font-medium text-slate-800 mb-2">ID Token (OIDC)</h3>
+
+                    <div class="mb-4">
+                        <h4 class="text-sm font-semibold text-slate-700 mb-1">Header</h4>
+                        <div class="bg-slate-50 border border-slate-200 p-3">
+                            <pre id="idTokenHeaderDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap">{
+  "alg": "RS256",
+  "typ": "JWT"
+}</pre>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-sm font-semibold text-slate-700 mb-1">Payload (Claims)</h4>
+                        <div class="bg-slate-50 border border-slate-200 p-3">
+                            <pre id="idTokenPayloadDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap">{
+  "sub": "1234567890",
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "email_verified": true,
+  "iss": "https://auth.example.com",
+  "aud": "my-client-id",
+  "exp": 1516242622,
+  "iat": 1516239022
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="userInfoSection">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-base font-medium text-slate-800">User Information</h3>
+                        <button id="fetchUserInfoBtn" class="text-xs bg-violet-100 hover:bg-violet-200 text-violet-700 px-2 py-1 rounded transition-colors">
+                            Fetch
+                        </button>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 p-3">
+                        <pre id="userInfoDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap">{
+  "sub": "1234567890",
+  "name": "John Doe",
+  "given_name": "John",
+  "family_name": "Doe",
+  "email": "john.doe@example.com",
+  "email_verified": true,
+  "picture": "https://example.com/avatar.jpg",
+  "locale": "en-US"
+}</pre>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="border-t border-slate-200 pt-4 mt-6 flex flex-wrap justify-end gap-2">
+        <button id="clearAuthCookiesBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 text-sm font-semibold transition-colors rounded-sm">
+            Clear Auth Cookies
+        </button>
+        <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm font-semibold transition-colors rounded-sm">
+            Logout
+        </button>
+        <button id="restartFlowBtn" class="bg-slate-500 hover:bg-slate-600 text-white px-3 py-1 text-sm font-semibold transition-colors rounded-sm">
+            Start New Flow
+        </button>
+    </div>
+
+</div>
+
+<div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white border border-slate-300 shadow-xl max-w-md w-full mx-4">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <span class="mr-3 text-xl">⚠</span>
+                <h3 class="text-lg font-semibold text-slate-800">Confirm Action</h3>
+            </div>
+            <p id="modalMessage" class="text-slate-600 mb-6 font-mono">Are you sure you want to proceed?</p>
+            <div class="flex justify-end space-x-2">
+                <button id="modalCancel"
+                        class="px-4 py-1 text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 font-semibold transition-colors h-[34px]">
+                    Cancel
+                </button>
+                <button id="modalConfirm"
+                        class="px-4 py-1 bg-red-500 hover:bg-red-600 text-white border border-red-500 font-semibold transition-colors h-[34px]">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="notifications" class="fixed top-4 right-4 space-y-2 z-40 font-mono"></div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+<script src="assets/js/ui-service.js"></script>
+
+<script>
+    const tokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
+
+    const $idTokenDisplay = $("#rawTokenDisplay");
+    if (tokenResponse.id_token) {
+        $idTokenDisplay.removeClass("hidden");
+        $idTokenDisplay.val(tokenResponse.id_token);
+    }
+
+    const $accessTokenDisplay = $("#accessTokenDisplay");
+    $accessTokenDisplay.val(tokenResponse.access_token);
+
+    const $refreshTokenDisplay = $("#refreshTokenDisplay");
+    if (tokenResponse.refresh_token) {
+        $refreshTokenDisplay.val(tokenResponse.refresh_token);
+    } else {
+        $("#refreshTokenSection").remove();
+    }
+</script>
+
+</body>
+</html>

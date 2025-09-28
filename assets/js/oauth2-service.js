@@ -284,36 +284,35 @@ const OAuth2Service = {
         }
     },
 
-    async refreshToken() {
-        const refreshToken = this.tokens.refresh_token || $('#refreshToken').val();
-        if (!refreshToken) {
-            UIService.showNotification('No refresh token available', 'warning');
-            return;
-        }
+    async refreshToken(token) {
+        const oauth2PlaygroundData = $.parseJSON(StorageService.getFromStorage() || '{}');
 
-        UIService.showLoading('refreshTokenBtn');
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: oauth2PlaygroundData.tokenUrl,
+                method: 'POST',
+                contentType: 'application/x-www-form-urlencoded',
+                headers: {
+                    'Authorization': 'Basic ' + btoa(oauth2PlaygroundData.clientId + ':' + oauth2PlaygroundData.clientSecret)
+                },
+                data: $.param({
+                    grant_type: 'refresh_token',
+                    refresh_token: token
+                }),
+                success: (response) => {
+                    console.log(response);
+                    resolve(response);
 
-        try {
-            await Utils.delay(1000);
-
-            const mockToken = {
-                access_token: Utils.generateMockJWT(),
-                token_type: 'Bearer',
-                expires_in: 3600,
-                refresh_token: Utils.generateMockJWT(),
-                scope: this.tokens.scope || 'openid profile email'
-            };
-
-            this.tokens = mockToken;
-            this.displayTokenResponse(mockToken);
-            UIService.showNotification('Token refreshed successfully!', 'success');
-        } catch (error) {
-            UIService.showNotification('Token refresh failed: ' + error.message, 'error');
-        } finally {
-            UIService.hideLoading('refreshTokenBtn');
-        }
+                },
+                error: function(xhr, status, error) {
+                    const errorMsg = xhr.responseJSON
+                        ? JSON.stringify(xhr.responseJSON)
+                        : xhr.responseText || 'Unknown error';
+                    reject(new Error(errorMsg));
+                }
+            });
+        });
     },
-
     getAuthorizationCode() {
         // $('#copyAuthUrlBtn').on('click', (e) => {});
 

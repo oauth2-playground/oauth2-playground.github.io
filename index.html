@@ -23,8 +23,9 @@
         </p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[68vh]">
-        <div class="border border-slate-200 bg-white form-container flex flex-col">
+<!--    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[68vh]">-->
+    <div class="flex flex-col lg:flex-row gap-6 h-[68vh] w-full items-stretch">
+        <div class="border border-slate-200 bg-white form-container flex flex-col w-1/2">
             <div class="bg-blue-50 border-b border-slate-200 p-3 flex-shrink-0">
                 <h2 class="text-lg font-semibold text-slate-800 flex items-center">
                     <span class="mr-2 text-blue-500">></span>
@@ -88,7 +89,7 @@
                         <label for="clientSecret" class="block text-slate-700 text-xs font-semibold mb-1">
                             Client Secret
                         </label>
-                        <input type="password" id="clientSecret"
+                        <input type="text" id="clientSecret"
                                class="w-full px-3 py-1 bg-white border border-slate-300 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 h-[34px] rounded-sm"
                                placeholder="your-client-secret">
                     </div>
@@ -229,14 +230,14 @@
                     </button>
                     <button id="resetBtn"
                             class="bg-slate-500 hover:bg-slate-600 text-white px-4 py-1 font-semibold transition-colors h-[34px]">
-                        Clear
+                        Reset
                     </button>
 
                 </div>
             </div>
         </div>
 
-        <div class="border border-slate-200 bg-white flex flex-col">
+        <div class="border border-slate-200 bg-white flex flex-col w-1/2">
             <div class="bg-blue-50 border-b border-slate-200 p-3">
                 <h2 class="text-lg font-semibold text-slate-800 flex items-center">
                     <span class="mr-2 text-blue-500">⚙</span>

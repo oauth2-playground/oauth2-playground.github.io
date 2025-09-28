@@ -27,20 +27,27 @@
             <div class="bg-blue-50 border-b border-slate-200 p-3 flex-shrink-0">
                 <h2 class="text-lg font-semibold text-slate-800 flex items-center">
                     <span class="mr-2 text-blue-500">§</span>
-                    Token Information
+                    Raw Tokens
                 </h2>
             </div>
 
             <div class="space-y-5 p-5 flex-1 overflow-y-auto">
 
                 <div>
-                    <div class="flex justify-between items-center mb-2">
+                    <div id="accessTokenHeader" class="flex justify-between items-center mb-2">
                         <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">Access Token</h3>
                         <button id="refreshAccessTokenBtn" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-700 px-2 py-1 rounded transition-colors">
                             Refresh
                         </button>
                     </div>
-                    <textarea id="accessTokenDisplay" readonly
+                    <textarea id="accessTokenDisplay" readonly rows="5"
+                              class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 font-mono text-xs focus:outline-none cursor-text select-all"
+                    ></textarea>
+                </div>
+
+                <div id="idTokenSection">
+                    <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">ID Token</h3>
+                    <textarea id="idTokenDisplay" readonly rows="5"
                               class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 font-mono text-xs focus:outline-none cursor-text select-all"
                     ></textarea>
                 </div>
@@ -51,31 +58,7 @@
                     </h3>
                     <textarea id="refreshTokenDisplay" readonly
                               class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 font-mono text-xs focus:outline-none cursor-text select-all"
-                              rows="2">rt_1234567890abcdefghijklmnopqrstuvwxyz</textarea>
-                </div>
-
-                <div>
-                    <h3 class="text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wide border-b border-slate-200 pb-1">
-                        Token Analysis
-                    </h3>
-                    <div class="bg-slate-50 border border-slate-200 p-3 space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="font-medium text-slate-700">Type:</span>
-                            <span id="tokenType" class="text-green-600 font-semibold">JWT</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="font-medium text-slate-700">Algorithm:</span>
-                            <span id="tokenAlgorithm" class="text-slate-600">RS256</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="font-medium text-slate-700">Valid:</span>
-                            <span id="tokenValid" class="text-green-600">✓ Valid</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="font-medium text-slate-700">Expires:</span>
-                            <span id="tokenExpiry" class="text-slate-600">2024-01-15 12:30:22 UTC</span>
-                        </div>
-                    </div>
+                              rows="2"></textarea>
                 </div>
 
                 <div>
@@ -84,16 +67,16 @@
                     </h3>
                     <div class="bg-slate-50 border border-slate-200 p-3 space-y-2 text-sm">
                         <div class="flex justify-between">
-                            <span class="font-medium text-slate-700">Scope:</span>
-                            <span id="tokenScope" class="text-slate-600">openid profile email</span>
+                            <span class="font-medium text-slate-700">Token Type:</span>
+                            <span id="tokenTypeBearer" class="text-slate-600"></span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="font-medium text-slate-700">Token Type:</span>
-                            <span id="tokenTypeBearer" class="text-slate-600">Bearer</span>
+                            <span class="font-medium text-slate-700">Scope:</span>
+                            <span id="tokenScope" class="text-slate-600"></span>
                         </div>
                         <div class="flex justify-between">
                             <span class="font-medium text-slate-700">Expires In:</span>
-                            <span id="tokenExpiresIn" class="text-slate-600">3600 seconds</span>
+                            <span id="tokenExpiresIn" class="text-slate-600"></span>
                         </div>
                     </div>
                 </div>
@@ -105,122 +88,96 @@
             <div class="bg-blue-50 border-b border-slate-200 p-3 flex-shrink-0">
                 <h2 class="text-lg font-semibold text-slate-800 flex items-center">
                     <span class="mr-2 text-blue-500">∞</span>
-                    Token Claims & Actions
+                    Token Analysis
                 </h2>
             </div>
 
             <div class="p-4 space-y-5 flex-1 overflow-y-auto">
 
-                <div>
-                    <h3 class="text-base font-medium text-slate-800 mb-2">Access Token (JWT)</h3>
+                <div id="opaqueTokenSection" class="hidden">
+                    <h3 class="text-base font-medium text-slate-800 mb-2">Token Information</h3>
+                    <div class="bg-slate-50 border border-slate-200 p-3 space-y-2 text-sm">
+                        <div class="text-center py-6">
+                            <div class="text-slate-500 mb-2">X</div>
+                            <p class="text-slate-600">This is an opaque access token</p>
+                            <p class="text-xs text-slate-500 mt-1">Cannot decode internal structure</p>
+                        </div>
+                    </div>
+                </div>
 
-                    <div id="jwtHeaderSection" class="mb-4">
+                <div id="accessTokenAnalysisSection">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-base font-bold text-slate-800 mb-2">Access Token Details</h3>
+                        <button id="validateTokenBtn" class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition-colors">
+                            Validate
+                        </button>
+                    </div>
+                    <hr><br>
+
+                    <div class="bg-slate-50 border border-slate-200 p-3 space-y-2 text-sm mb-4">
+                        <div class="flex justify-between">
+                            <span class="font-medium text-slate-700">Type:</span>
+                            <span id="tokenType" class="text-green-600 font-semibold"></span>
+                        </div>
+                        <div id="tokenAlgorithmRow" class="flex justify-between">
+                            <span class="font-medium text-slate-700">Algorithm:</span>
+                            <span id="tokenAlgorithm" class="text-slate-600"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium text-slate-700">Valid:</span>
+                            <span id="tokenValid" class="text-green-600"></span>
+                        </div>
+                        <div id="tokenExpiryRow" class="flex justify-between">
+                            <span class="font-medium text-slate-700">Expires:</span>
+                            <span id="tokenExpiry" class="text-slate-600"></span>
+                        </div>
+                    </div>
+                    <div id="jwtHeaderSection">
                         <h4 class="text-sm font-semibold text-slate-700 mb-1">Header</h4>
-                        <div class="bg-slate-50 border border-slate-200 p-3">
-                            <pre id="jwtHeaderDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap">{
-  "alg": "RS256",
-  "typ": "JWT",
-  "kid": "123"
-}</pre>
+                        <div class="bg-slate-50 border border-slate-200 p-3 mb-4">
+                            <pre id="jwtHeaderDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
                         </div>
                     </div>
 
-                    <div id="jwtPayloadSection" class="mb-4">
-                        <h4 class="text-sm font-semibold text-slate-700 mb-1">Payload (Claims)</h4>
-                        <div class="bg-slate-50 border border-slate-200 p-3">
-                            <pre id="jwtPayloadDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap">{
-  "sub": "1234567890",
-  "name": "John Doe",
-  "admin": true,
-  "iat": 1516239022,
-  "exp": 1516242622,
-  "aud": "my-client-id",
-  "iss": "https://auth.example.com",
-  "email": "john.doe@example.com",
-  "email_verified": true,
-  "preferred_username": "johndoe"
-}</pre>
+                    <div id="jwtPayloadSection">
+                        <h4 class="text-sm font-semibold text-slate-700 mb-1">Payload</h4>
+                        <div class="bg-slate-50 border border-slate-200 p-3 mb-4">
+                            <pre id="jwtPayloadDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
                         </div>
                     </div>
 
                     <div id="jwtSignatureSection">
-                        <div class="flex justify-between items-center mb-1">
-                            <h4 class="text-sm font-semibold text-slate-700">Signature</h4>
-                            <button id="validateTokenBtn" class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition-colors">
-                                Validate
-                            </button>
-                        </div>
+                        <h4 class="text-sm font-semibold text-slate-700 mb-1">Signature</h4>
                         <div class="bg-slate-50 border border-slate-200 p-3">
                             <div class="space-y-2 text-xs">
                                 <div class="flex justify-between">
                                     <span class="font-medium text-slate-700">Status:</span>
-                                    <span class="text-green-600">✓ Verified</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="font-medium text-slate-700">Algorithm:</span>
-                                    <span class="text-slate-600">RS256</span>
+                                    <span id="signatureStatus" class="text-green-600"></span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="font-medium text-slate-700">Key ID:</span>
-                                    <span class="text-slate-600">123</span>
-                                </div>
-                                <div>
-                                    <span class="font-medium text-slate-700 block mb-1">Raw Signature:</span>
-                                    <textarea readonly class="w-full px-2 py-1 bg-white border border-slate-300 text-slate-600 font-mono text-xs resize-none" rows="2">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</textarea>
+                                    <span id="keyId" class="text-slate-600"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="rawTokenDisplay" class="hidden">
-                    <h3 class="text-base font-medium text-slate-800 mb-2">ID Token (OIDC)</h3>
-
-                    <div class="mb-4">
+                <div id="idTokenAnalysisSection">
+                    <h3 class="text-base font-bold text-slate-800 mb-2">ID Token Details</h3>
+                    <hr><br>
+                    <div id="idTokenHeaderSection">
                         <h4 class="text-sm font-semibold text-slate-700 mb-1">Header</h4>
-                        <div class="bg-slate-50 border border-slate-200 p-3">
-                            <pre id="idTokenHeaderDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap">{
-  "alg": "RS256",
-  "typ": "JWT"
-}</pre>
+                        <div class="bg-slate-50 border border-slate-200 p-3 mb-4">
+                            <pre id="idTokenHeaderDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
                         </div>
                     </div>
 
-                    <div>
-                        <h4 class="text-sm font-semibold text-slate-700 mb-1">Payload (Claims)</h4>
+                    <div id="idTokenPayloadSection">
+                        <h4 class="text-sm font-semibold text-slate-700 mb-1">Payload</h4>
                         <div class="bg-slate-50 border border-slate-200 p-3">
-                            <pre id="idTokenPayloadDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap">{
-  "sub": "1234567890",
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "email_verified": true,
-  "iss": "https://auth.example.com",
-  "aud": "my-client-id",
-  "exp": 1516242622,
-  "iat": 1516239022
-}</pre>
+                            <pre id="idTokenPayloadDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
                         </div>
-                    </div>
-                </div>
-
-                <div id="userInfoSection">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-base font-medium text-slate-800">User Information</h3>
-                        <button id="fetchUserInfoBtn" class="text-xs bg-violet-100 hover:bg-violet-200 text-violet-700 px-2 py-1 rounded transition-colors">
-                            Fetch
-                        </button>
-                    </div>
-                    <div class="bg-slate-50 border border-slate-200 p-3">
-                        <pre id="userInfoDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap">{
-  "sub": "1234567890",
-  "name": "John Doe",
-  "given_name": "John",
-  "family_name": "Doe",
-  "email": "john.doe@example.com",
-  "email_verified": true,
-  "picture": "https://example.com/avatar.jpg",
-  "locale": "en-US"
-}</pre>
                     </div>
                 </div>
 
@@ -230,9 +187,6 @@
     </div>
 
     <div class="border-t border-slate-200 pt-4 mt-6 flex flex-wrap justify-end gap-2">
-        <button id="clearAuthCookiesBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 text-sm font-semibold transition-colors rounded-sm">
-            Clear Auth Cookies
-        </button>
         <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm font-semibold transition-colors rounded-sm">
             Logout
         </button>
@@ -270,25 +224,211 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
 <script src="assets/js/ui-service.js"></script>
+<script src="assets/js/storage-service.js"></script>
+<script src="assets/js/oauth2-service.js"></script>
 
 <script>
-    const tokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
+    const oauth2PlaygroundData = $.parseJSON(StorageService.getFromStorage() || '{}');
 
-    const $idTokenDisplay = $("#rawTokenDisplay");
-    if (tokenResponse.id_token) {
-        $idTokenDisplay.removeClass("hidden");
-        $idTokenDisplay.val(tokenResponse.id_token);
+    function decodeJWT(token) {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                throw new Error('Invalid JWT format');
+            }
+
+            const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            const signature = parts[2];
+
+            return { header, payload, signature };
+        } catch (error) {
+            console.error('Error decoding JWT:', error);
+            return null;
+        }
     }
 
-    const $accessTokenDisplay = $("#accessTokenDisplay");
-    $accessTokenDisplay.val(tokenResponse.access_token);
-
-    const $refreshTokenDisplay = $("#refreshTokenDisplay");
-    if (tokenResponse.refresh_token) {
-        $refreshTokenDisplay.val(tokenResponse.refresh_token);
-    } else {
-        $("#refreshTokenSection").remove();
+    function formatTimestamp(timestamp) {
+        if (!timestamp) return 'N/A';
+        return new Date(timestamp * 1000).toISOString().replace('T', ' ').replace('Z', ' UTC');
     }
+
+    function isTokenExpired(exp) {
+        if (!exp) return false;
+        return Date.now() >= exp * 1000;
+    }
+
+    function isOpaqueToken(token) {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(token) || !token.includes('.');
+    }
+
+    function initializeTokenData() {
+        const tokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
+
+        if (!tokenResponse) {
+            console.error('No token response found in session storage');
+            return;
+        }
+
+        const $accessTokenDisplay = $("#accessTokenDisplay");
+        $accessTokenDisplay.val(tokenResponse.access_token);
+
+        if (tokenResponse.access_token) {
+            const isOpaque = isOpaqueToken(tokenResponse.access_token);
+
+            if (isOpaque) {
+                $("#accessTokenAnalysisSection").addClass("hidden");
+                $("#opaqueTokenSection").removeClass("hidden");
+                $("#tokenType").text("Opaque");
+                $("#tokenScope").text(tokenResponse.scope || 'N/A');
+            } else {
+                $("#accessTokenAnalysisSection").removeClass("hidden");
+                $("#opaqueTokenSection").addClass("hidden");
+                const accessTokenData = decodeJWT(tokenResponse.access_token);
+                if (accessTokenData) {
+                    $("#jwtHeaderDisplay").text(JSON.stringify(accessTokenData.header, null, 2));
+                    $("#jwtPayloadDisplay").text(JSON.stringify(accessTokenData.payload, null, 2));
+
+                    $("#tokenType").text(accessTokenData.header.typ || 'JWT');
+                    $("#tokenAlgorithm").text(accessTokenData.header.alg || 'Unknown');
+
+                    const isExpired = isTokenExpired(accessTokenData.payload.exp);
+                    $("#tokenValid").html(isExpired ? '<span class="text-red-600">✗ Expired</span>' : '<span class="text-green-600">✓ Valid</span>');
+                    $("#tokenExpiry").text(formatTimestamp(accessTokenData.payload.exp));
+                    $("#keyId").text(accessTokenData.header.kid || 'N/A');
+                    $("#signatureStatus").html('<span class="text-green-600">✓ Verified</span>');
+
+                    $("#tokenScope").text(tokenResponse.scope || accessTokenData.payload.scope   || 'N/A');
+                } else {
+                    $("#accessTokenAnalysisSection").addClass("hidden");
+                    $("#opaqueTokenSection").removeClass("hidden");
+                }
+            }
+        }
+
+        const $refreshTokenDisplay = $("#refreshTokenDisplay");
+        if (tokenResponse.refresh_token) {
+            $refreshTokenDisplay.val(tokenResponse.refresh_token);
+            $("#refreshTokenSection").removeClass("hidden");
+            $("#refreshAccessTokenBtn").removeClass("hidden");
+        } else {
+            $("#refreshTokenSection").addClass("hidden");
+            $("#refreshAccessTokenBtn").addClass("hidden");
+        }
+
+        const $idTokenDisplay = $("#idTokenDisplay");
+        if (tokenResponse.id_token) {
+            $idTokenDisplay.val(tokenResponse.id_token);
+            $("#idTokenSection").removeClass("hidden");
+            $("#idTokenAnalysisSection").removeClass("hidden");
+
+            const idTokenData = decodeJWT(tokenResponse.id_token);
+            if (idTokenData) {
+                $("#idTokenHeaderDisplay").text(JSON.stringify(idTokenData.header, null, 2));
+                $("#idTokenPayloadDisplay").text(JSON.stringify(idTokenData.payload, null, 2));
+            }
+        } else {
+            $("#idTokenSection").addClass("hidden");
+            $("#idTokenAnalysisSection").addClass("hidden");
+        }
+
+        $("#tokenTypeBearer").text(tokenResponse.token_type || 'Bearer');
+        $("#tokenExpiresIn").text((tokenResponse.expires_in || 'N/A') + ' seconds');
+    }
+
+    $(document).ready(function() {
+        initializeTokenData();
+
+        $("#refreshAccessTokenBtn").click(function() {
+            const cachedTokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
+
+            if (cachedTokenResponse && cachedTokenResponse.refresh_token) {
+                console.log("Refreshing access token...");
+
+                $(this).prop('disabled', true).text('Refreshing...');
+
+                OAuth2Service.refreshToken(cachedTokenResponse.refresh_token)
+                    .then(function(response) {
+                        console.log("Refresh token response:", response);
+                        console.log(JSON.stringify(response));
+
+                        sessionStorage.setItem("token_response", JSON.stringify(response));
+
+                        initializeTokenData();
+
+                        UIService.showNotification("Access token refreshed successfully!", "success");
+                    })
+                    .catch(function(error) {
+                        console.error("Error refreshing token:", error);
+                        UIService.showNotification("Failed to refresh token: " + error.message, "error");
+                    })
+                    .finally(() => {
+                        $(this).prop('disabled', false).text('Refresh');
+                    });
+            } else {
+                UIService.showNotification("No refresh token available", "error");
+            }
+        });
+
+        $("#validateTokenBtn").click(function() {
+            const tokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
+            if (tokenResponse && tokenResponse.access_token) {
+                const tokenData = decodeJWT(tokenResponse.access_token);
+                if (tokenData) {
+                    const isExpired = isTokenExpired(tokenData.payload.exp);
+                    $.ajax({
+                        url: oauth2PlaygroundData.discoveryUrl,
+                        method: "GET",
+                        success: function (data) {
+                            const jwksUri = data.jwks_uri;
+                            $.ajax({
+                                url: jwksUri,
+                                method: "GET",
+                                success: function (jwksData) {
+                                    const keys = jwksData.keys;
+                                    const validKeyFound = keys.find(k => k.kid === tokenData.header.kid);
+                                    if (!validKeyFound) {
+                                        UIService.showNotification("Key ID not found in JWKS", "error");
+                                    }
+                                },
+                                error: function () {
+                                    UIService.showNotification("Failed to fetch JWKS", "error");
+                                }
+                            });
+                        }
+                    });
+
+                    UIService.showNotification(`Token validation: ${isExpired ? "Not valid" : "Valid"}`, isExpired ? "error" : "success");
+                }
+            }
+        });
+
+        $("#logoutBtn").click(function() {
+            UIService.showModal(
+                "Are you sure you want to logout? This will clear all session data.",
+                function() {
+                    sessionStorage.clear();
+
+                    const tokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
+                    if (tokenResponse && tokenResponse.access_token) {
+                        const tokenData = decodeJWT(tokenResponse.access_token);
+                        if (tokenData && tokenData.payload.iss) {
+                            window.location.href = tokenData.payload.iss + "/logout";
+                            return;
+                        }
+                    }
+
+                    window.location.href = "index.html";
+                }
+            );
+        });
+
+        $("#restartFlowBtn").click(function() {
+            sessionStorage.clear();
+            window.location.href = "index.html";
+        });
+    });
 </script>
 
 </body>

@@ -33,16 +33,20 @@ const OAuth2Service = {
                 tokenEndpoint: openidConfig.token_endpoint,
                 authorizationEndpoint: openidConfig.authorization_endpoint,
                 userInfoEndpoint: openidConfig.userinfo_endpoint,
-                revocationEndpoint: openidConfig.revocation_endpoint,
                 issuer: openidConfig.issuer,
                 grantTypes: openidConfig.grant_types_supported || [],
                 responseTypes: openidConfig.response_types_supported || [],
                 scopes: openidConfig.scopes_supported || [],
+                refreshTokenUrl: openidConfig.token_endpoint,
+                logoutEndpoint: openidConfig.end_session_endpoint,
+                revocationEndpoint: openidConfig.revocation_endpoint,
                 codeChallengeMethods: openidConfig.code_challenge_methods_supported || []
             };
 
             $('#tokenUrl').val(OAuth2Provider.tokenEndpoint);
             $('#authorizationUrl').val(OAuth2Provider.authorizationEndpoint);
+            $('#refreshTokenUrl').val(OAuth2Provider.refreshTokenUrl);
+
 
             const $grantTypeSelectOptions = $('#grantType').children();
 
@@ -289,7 +293,7 @@ const OAuth2Service = {
 
         return new Promise((resolve, reject) => {
             $.ajax({
-                url: oauth2PlaygroundData.tokenUrl,
+                url: oauth2PlaygroundData.refreshTokenUrl,
                 method: 'POST',
                 contentType: 'application/x-www-form-urlencoded',
                 headers: {
@@ -313,6 +317,7 @@ const OAuth2Service = {
             });
         });
     },
+
     getAuthorizationCode() {
         // $('#copyAuthUrlBtn').on('click', (e) => {});
 

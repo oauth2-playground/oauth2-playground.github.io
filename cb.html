@@ -158,7 +158,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
 
-<!--<script src="assets/js/utils.js"></script>-->
+<script src="assets/js/utils.js"></script>
 <script src="assets/js/storage-service.js"></script>
 <script src="assets/js/ui-service.js"></script>
 <script src="assets/js/oauth2-service.js"></script>
@@ -168,9 +168,33 @@
 <script>
     const grantType = sessionStorage.getItem("flow_grant_type");
     console.log("grantType: ", grantType);
-    if (grantType !== "authorization_code" && grantType !== "authorization_code_pkce") {
+    if (grantType !== "authorization_code" && grantType !== "authorization_code_pkce" && grantType !== "implicit") {
         window.location.href = 'index.html';
     }
+
+    if (grantType === "implicit") {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+        const tokenResponse = {
+            access_token: hashParams.get("access_token"),
+            state: hashParams.get("state"),
+            expires_in: hashParams.get("expires_in"),
+            tokenType: hashParams.get("token_type"),
+            scope: hashParams.get("scope").replace(/\+/g, " ")
+        }
+
+        if (OAuth2Service.isValidTheState(tokenResponse.state)){
+            sessionStorage.setItem("token_response", JSON.stringify(tokenResponse));
+        } else {
+            UIService.showNotification(`The received state isn't valid`, "error");
+            Utils.delay(2000).then(() => returnToIndex());
+        }
+
+
+        window.location.href = 'results.html';
+
+    }
+
     const isPKCE = grantType === "authorization_code_pkce";
 
     const clientId = sessionStorage.getItem("flow_client_id");
@@ -284,20 +308,28 @@
             grant_type: 'authorization_code',
             code: authCode,
             redirect_uri: redirectUri,
-            client_id: clientId
         };
+
         const payload = isPKCE? {
             ...payloadCommons,
+            client_id: clientId,
             code_verifier: codeVerifier
         } : {
-            ...payloadCommons,
-            client_secret: clientSecret
+            ...payloadCommons
+            // client_secret: clientSecret
+        };
+
+        const headers = isPKCE ? {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        } : {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Basic ' + btoa(`${clientId}:${clientSecret}`)
         };
 
         $.ajax({
             url: tokenUrl,
             method: 'POST',
-            contentType: 'application/x-www-form-urlencoded',
+            headers: headers,
             data: $.param(payload),
             success: (res) => {
                 console.log(res);

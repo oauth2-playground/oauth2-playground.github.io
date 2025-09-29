@@ -115,21 +115,23 @@
                     <hr><br>
 
                     <div class="bg-slate-50 border border-slate-200 p-3 space-y-2 text-sm mb-4">
-                        <div class="flex justify-between">
-                            <span class="font-medium text-slate-700">Type:</span>
-                            <span id="tokenType" class="text-green-600 font-semibold"></span>
-                        </div>
-                        <div id="tokenAlgorithmRow" class="flex justify-between">
-                            <span class="font-medium text-slate-700">Algorithm:</span>
-                            <span id="tokenAlgorithm" class="text-slate-600"></span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="font-medium text-slate-700">Valid:</span>
-                            <span id="tokenValid" class="text-green-600"></span>
-                        </div>
-                        <div id="tokenExpiryRow" class="flex justify-between">
-                            <span class="font-medium text-slate-700">Expires:</span>
-                            <span id="tokenExpiry" class="text-slate-600"></span>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex justify-between">
+                                <span class="font-medium text-slate-700">Type:</span>
+                                <span id="tokenType" class="text-green-600 font-semibold"></span>
+                            </div>
+                            <div id="tokenAlgorithmRow" class="flex justify-between">
+                                <span class="font-medium text-slate-700">Algorithm:</span>
+                                <span id="tokenAlgorithm" class="text-slate-600"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="font-medium text-slate-700">Valid:</span>
+                                <span id="tokenValid" class="text-green-600"></span>
+                            </div>
+                            <div id="tokenExpiryRow" class="flex justify-between">
+                                <span class="font-medium text-slate-700">Expires:</span>
+                                <span id="tokenExpiry" class="text-slate-600"></span>
+                            </div>
                         </div>
                     </div>
                     <div id="jwtHeaderSection">
@@ -141,13 +143,6 @@
 
                     <div id="jwtPayloadSection">
                         <h4 class="text-sm font-semibold text-slate-700 mb-1">Payload</h4>
-                        <div class="bg-slate-50 border border-slate-200 p-3 mb-4">
-                            <pre id="jwtPayloadDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
-                        </div>
-                    </div>
-
-                    <div id="jwtSignatureSection">
-                        <h4 class="text-sm font-semibold text-slate-700 mb-1">Signature</h4>
                         <div class="bg-slate-50 border border-slate-200 p-3">
                             <div class="space-y-2 text-xs">
                                 <div class="flex justify-between">
@@ -156,7 +151,7 @@
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="font-medium text-slate-700">Key ID:</span>
-                                    <span id="keyId" class="text-slate-600"></span>
+                                    <span id="keyId" class="text-slate-600 break-all text-right max-w-[60%]"></span>
                                 </div>
                             </div>
                         </div>

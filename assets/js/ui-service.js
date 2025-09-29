@@ -174,8 +174,14 @@ const UIService = {
             refresh_token: [ "clientSecret", "refreshTokenUrl", "refreshToken"]
         };
 
-        // hide every field
-        $dynamicFields.children().addClass('hidden');
+        const directTokenExchangeGrantTypes = ['password', 'client_credentials', 'refresh_token'];
+        if (directTokenExchangeGrantTypes.includes(grantType)) {
+            $("#startAuthBtn").text("Get Token");
+        } else {
+            $("#startAuthBtn").text("Build Request");
+        }
+
+         $dynamicFields.children().addClass('hidden');
 
         if (grantTypeFields[grantType]) {
             const fieldsToShow = grantTypeFields[grantType];

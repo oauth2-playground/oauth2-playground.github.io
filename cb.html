@@ -166,8 +166,29 @@
 <!--<script src="assets/js/main.js"></script>-->
 
 <script>
+    //logout ccallback
+    (() => {
+        const params = new URLSearchParams(window.location.search);
+        const st = params.get('state');
+
+        if (st && st.endsWith('logoutcb')) {
+            document.documentElement.style.backgroundColor = '#ffffff';
+            document.body.innerHTML = '';
+
+            try {
+                if (typeof OAuth2Service === 'object' && OAuth2Service.isValidTheState(st)) {
+                    window.location.replace('index.html');
+                } else {
+                    window.location.replace('index.html');
+                }
+            } catch (_) {
+                window.location.replace('index.html');
+            }
+        }
+    })();
+
     const grantType = sessionStorage.getItem("flow_grant_type");
-    console.log("grantType: ", grantType);
+
     if (grantType !== "authorization_code" && grantType !== "authorization_code_pkce" && grantType !== "implicit") {
         window.location.href = 'index.html';
     }
@@ -224,9 +245,15 @@
     const error = urlParams.get('error');
     const errorDescription = urlParams.get('error_description');
 
+    // if (state && OAuth2Service.isValidTheState(state)) {
+    //     if (state.endsWith("logoutcb")) {
+    //         returnToIndex()
+    //     }
+    // }
+
     if (!code || !state) {
         UIService.showNotification("No authorization code or state found in the URL", "error");
-        // Utils.delay(2000).then(() => returnToIndex()); //todo; activar
+        Utils.delay(2000).then(() => returnToIndex()); //todo; activar
     }
 
     if (error) {
@@ -241,8 +268,9 @@
     // UIService.showNotification(`Authorization code received: ${code}`, "success");
 
     if (state && OAuth2Service.isValidTheState(state)) {
+
         // console.log(state);
-        console.log(state)
+        // console.log(state)
         $authCodeInput.val(code);
 
         const cleanUrl = window.location.origin + window.location.pathname;
@@ -279,14 +307,14 @@
         const $exchangeBtn = $('#exchangeCodeBtn');
 
         if (tokenUrl && redirectUri && authCode && (isPKCE || clientSecret)) {
-            console.log("enabling exchange button");
+            // console.log("enabling exchange button");
 
             $exchangeBtn
                 .prop('disabled', false)
                 .removeClass('bg-gray-300 text-gray-500 cursor-not-allowed')
                 .addClass('bg-emerald-500 hover:bg-emerald-600 text-white cursor-pointer');
         } else {
-            console.log("Disabling exchange button");
+            // console.log("Disabling exchange button");
             $exchangeBtn
                 .prop('disabled', true)
                 .removeClass('bg-emerald-500 hover:bg-emerald-600 text-white cursor-pointer')
@@ -332,7 +360,7 @@
             headers: headers,
             data: $.param(payload),
             success: (res) => {
-                console.log(res);
+                // console.log(res);
                 // this.displayTokenResponse(res.access_toke)
                 UIService.showNotification('Code Exchanged Successfully', 'success');
 

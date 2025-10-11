@@ -10,7 +10,7 @@ const UIService = {
         const oauth2PlaygroundData = $.parseJSON(StorageService.getFromStorage() || '{}');
 
         const fields =[
-            'grantType', 'discoveryUrl',
+            'grantType', 'discoveryUrl', 'logoutUrl',
             'tokenUrl', 'authorizationUrl', 'userinfoUrl', 'revocationUrl',
             'clientId', 'clientSecret', 'redirectUri', 'scope', 'refreshTokenUrl',
             'codeChallengeMethod'
@@ -103,6 +103,11 @@ const UIService = {
             this.hideModal();
             if (onConfirm) onConfirm();
         });
+        const $modalCancel = $('#modalCancel');
+        $modalCancel.off('click');
+        $modalCancel.on('click', () => {
+            this.hideModal();
+        });
     },
 
     hideModal() {
@@ -164,14 +169,14 @@ const UIService = {
                         .find(`#${id}`).length > 0;
                 })
 
-        const commonFields = ["tokenUrl", "authorizationUrl", "scope"];
+        const commonFields = ["tokenUrl", "authorizationUrl", "scope", "logoutUrl"];
         const grantTypeFields = {
             authorization_code_pkce: [...commonFields, "redirectUri", "codeVerifier", "codeChallenge", "codeChallengeMethod", "authCodeInput"],
             authorization_code: ["clientSecret", ...commonFields, "redirectUri", "authCodeInput"],
-            implicit: ["authorizationUrl", "redirectUri", "scope"],
-            password: ["clientSecret", "tokenUrl", "scope", "username"],
-            client_credentials: ["clientSecret", "tokenUrl", "scope" ],
-            refresh_token: [ "clientSecret", "refreshTokenUrl", "refreshToken"]
+            implicit: ["authorizationUrl", "redirectUri", "scope", "logoutUrl"],
+            password: ["clientSecret", "tokenUrl", "scope", "username", "revocationUrl"],
+            client_credentials: ["clientSecret", "tokenUrl", "scope", "revocationUrl" ],
+            refresh_token: [ "clientSecret", "refreshTokenUrl", "refreshToken", "revocationUrl"]
         };
 
         const directTokenExchangeGrantTypes = ['password', 'client_credentials', 'refresh_token'];

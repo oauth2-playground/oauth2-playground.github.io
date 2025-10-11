@@ -95,7 +95,8 @@
             <div class="p-4 space-y-5 flex-1 overflow-y-auto">
 
                 <div id="opaqueTokenSection" class="hidden">
-                    <h3 class="text-base font-medium text-slate-800 mb-2">Token Information</h3>
+                    <h3 class="text-base font-bold text-slate-800 mb-2">Token Information</h3>
+                    <hr><br>
                     <div class="bg-slate-50 border border-slate-200 p-3 space-y-2 text-sm">
                         <div class="text-center py-6">
                             <div class="text-slate-500 mb-2">X</div>
@@ -143,17 +144,20 @@
 
                     <div id="jwtPayloadSection">
                         <h4 class="text-sm font-semibold text-slate-700 mb-1">Payload</h4>
-                        <div class="bg-slate-50 border border-slate-200 p-3">
-                            <div class="space-y-2 text-xs">
-                                <div class="flex justify-between">
-                                    <span class="font-medium text-slate-700">Status:</span>
-                                    <span id="signatureStatus" class="text-green-600"></span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="font-medium text-slate-700">Key ID:</span>
-                                    <span id="keyId" class="text-slate-600 break-all text-right max-w-[60%]"></span>
-                                </div>
-                            </div>
+<!--                        <div class="bg-slate-50 border border-slate-200 p-3">-->
+<!--                            <div class="space-y-2 text-xs">-->
+<!--                                <div class="flex justify-between">-->
+<!--                                    <span class="font-medium text-slate-700">Status:</span>-->
+<!--                                    <span id="signatureStatus" class="text-green-600"></span>-->
+<!--                                </div>-->
+<!--                                <div class="flex justify-between">-->
+<!--                                    <span class="font-medium text-slate-700">Key ID:</span>-->
+<!--                                    <span id="keyId" class="text-slate-600 break-all text-right max-w-[60%]"></span>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+                        <div class="bg-slate-50 border border-slate-200 p-3 mt-4">
+                            <pre id="jwtPayloadDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
                         </div>
                     </div>
                 </div>
@@ -218,8 +222,10 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+<script src="assets/js/utils.js"></script>
 <script src="assets/js/ui-service.js"></script>
 <script src="assets/js/storage-service.js"></script>
+
 <script src="assets/js/oauth2-service.js"></script>
 
 <script>
@@ -273,6 +279,7 @@
             const isOpaque = isOpaqueToken(tokenResponse.access_token);
 
             if (isOpaque) {
+                $accessTokenDisplay.attr("rows", 1);
                 $("#accessTokenAnalysisSection").addClass("hidden");
                 $("#opaqueTokenSection").removeClass("hidden");
                 $("#tokenType").text("Opaque");
@@ -343,7 +350,7 @@
 
                 $(this).prop('disabled', true).text('Refreshing...');
 
-                OAuth2Service.refreshToken(cachedTokenResponse.refresh_token)
+                OAuth2Service.refreshToken(cachedTokenResponse.refresh_token, oauth2PlaygroundData.grantType === "authorization_code_pkce")
                     .then(function(response) {
                         console.log("Refresh token response:", response);
                         console.log(JSON.stringify(response));
@@ -402,20 +409,7 @@
         $("#logoutBtn").click(function() {
             UIService.showModal(
                 "Are you sure you want to logout? This will clear all session data.",
-                function() {
-                    sessionStorage.clear();
-
-                    const tokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
-                    if (tokenResponse && tokenResponse.access_token) {
-                        const tokenData = decodeJWT(tokenResponse.access_token);
-                        if (tokenData && tokenData.payload.iss) {
-                            window.location.href = tokenData.payload.iss + "/logout";
-                            return;
-                        }
-                    }
-
-                    window.location.href = "index.html";
-                }
+                () => OAuth2Service.logout()
             );
         });
 
@@ -428,3 +422,4 @@
 
 </body>
 </html>
+

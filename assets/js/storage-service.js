@@ -69,6 +69,7 @@ const StorageService = {
             clientId: document.getElementById('clientId')?.value || '',
             clientSecret: document.getElementById('clientSecret')?.value || '',
             redirectUri: document.getElementById('redirectUri')?.value || '',
+            logoutUrl: document.getElementById('logoutUrl')?.value || '',
             scope: document.getElementById('scope')?.value || '',
             refreshTokenUrl: document.getElementById('refreshTokenUrl')?.value || '',
             codeChallengeMethod: document.getElementById('codeChallengeMethod')?.value || '',

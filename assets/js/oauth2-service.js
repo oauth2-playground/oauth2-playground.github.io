@@ -39,14 +39,15 @@ const OAuth2Service = {
                 scopes: openidConfig.scopes_supported || [],
                 refreshTokenUrl: openidConfig.token_endpoint,
                 logoutEndpoint: openidConfig.end_session_endpoint,
-                revocationEndpoint: openidConfig.revocation_endpoint,
+                revocationUrl: openidConfig.revocation_endpoint,
                 codeChallengeMethods: openidConfig.code_challenge_methods_supported || []
             };
 
             $('#tokenUrl').val(OAuth2Provider.tokenEndpoint);
             $('#authorizationUrl').val(OAuth2Provider.authorizationEndpoint);
             $('#refreshTokenUrl').val(OAuth2Provider.refreshTokenUrl);
-
+            $('#logoutUrl').val(OAuth2Provider.logoutEndpoint);
+            $('#revocationUrl').val(OAuth2Provider.revocationUrl);
 
             const $grantTypeSelectOptions = $('#grantType').children();
 
@@ -252,6 +253,8 @@ const OAuth2Service = {
 
     },
 
+
+
     decodeToken(jwt) {
 
     },
@@ -288,7 +291,43 @@ const OAuth2Service = {
         }
     },
 
-    async refreshToken(token) {
+    async logout() {
+        const oauth2PlaygroundData = $.parseJSON(StorageService.getFromStorage() || '{}');
+        const tokensRaw = sessionStorage.getItem("token_response");
+
+        if (!tokensRaw) {
+            console.warn("No token found in sessionStorage, doing local logout only");
+            sessionStorage.clear();
+            window.location.href = "index.html";
+            return;
+        }
+
+        const tokens = JSON.parse(tokensRaw);
+
+        if (!oauth2PlaygroundData.logoutUrl) {
+            console.warn("No logout URL configured, doing local logout only");
+            sessionStorage.clear();
+            window.location.href = "index.html";
+            return;
+        }
+
+        const logoutParams = new URLSearchParams();
+
+        const postLogoutRedirectUri = `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, '')}cb.html`;
+        logoutParams.append('post_logout_redirect_uri', postLogoutRedirectUri);
+
+        if (tokens.id_token) {
+            logoutParams.append('id_token_hint', tokens.id_token);
+        }
+
+        logoutParams.append('state', this.generateState(true));
+
+        sessionStorage.clear();
+
+        window.location.href = `${oauth2PlaygroundData.logoutUrl}?${logoutParams.toString()}`;
+    },
+
+    async refreshToken(token, isPkce = false) {
         const oauth2PlaygroundData = $.parseJSON(StorageService.getFromStorage() || '{}');
 
         return new Promise((resolve, reject) => {
@@ -296,10 +335,14 @@ const OAuth2Service = {
                 url: oauth2PlaygroundData.refreshTokenUrl,
                 method: 'POST',
                 contentType: 'application/x-www-form-urlencoded',
-                headers: {
+                headers: !isPkce ? {
                     'Authorization': 'Basic ' + btoa(oauth2PlaygroundData.clientId + ':' + oauth2PlaygroundData.clientSecret)
-                },
-                data: $.param({
+                } : {},
+                data: isPkce ? $.param({
+                    grant_type: 'refresh_token',
+                    refresh_token: token,
+                    client_id: oauth2PlaygroundData.clientId,
+                }) : $.param({
                     grant_type: 'refresh_token',
                     refresh_token: token
                 }),
@@ -344,18 +387,22 @@ const OAuth2Service = {
         UIService.showSection('tokenSection');
     },
 
-    generateState() {
-        const state = Utils.generateRandomString(32);
+    generateState(isLogoutState = false) {
+        let state = Utils.generateRandomString(32);
+
+        if (isLogoutState) {
+            state = state.slice(0, -8) + 'logoutcb';
+        }
 
         StorageService.saveInStorage("state", state, sessionStorage);
-        console.log(`state generado: ${state}`);
+        // console.log(`state generado: ${state}`);
         return state;
     },
 
     isValidTheState(returnedState) {
         const savedState = StorageService.getFromStorage("state", sessionStorage);
         const savedStateStr = typeof savedState === "string" ? savedState : JSON.stringify(savedState);
-        console.log(`state guardado: ${savedState}`);
+        // console.log(`state guardado: ${savedState}`);
         return savedStateStr === returnedState;
     },
 

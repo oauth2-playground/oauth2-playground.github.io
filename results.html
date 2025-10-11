@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="favicon.ico">
     <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
 </head>
 <body class="bg-slate-50 text-slate-700 font-mono min-h-screen flex items-center justify-center p-4">
 
@@ -40,13 +41,17 @@
                             Refresh
                         </button>
                     </div>
+                    <div id="accessTokenJWTDisplay" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 font-mono text-xs overflow-x-auto hidden cursor-text select-all"></div>
                     <textarea id="accessTokenDisplay" readonly rows="5"
                               class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 font-mono text-xs focus:outline-none cursor-text select-all"
                     ></textarea>
                 </div>
 
                 <div id="idTokenSection">
-                    <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">ID Token</h3>
+                    <div id="idTokenHeader" class="mb-2">
+                        <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">ID Token</h3>
+                    </div>
+                    <div id="idTokenJWTDisplay" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 font-mono text-xs overflow-x-auto hidden cursor-text select-all"></div>
                     <textarea id="idTokenDisplay" readonly rows="5"
                               class="w-full px-3 py-2 bg-slate-50 border border-slate-300 text-slate-700 font-mono text-xs focus:outline-none cursor-text select-all"
                     ></textarea>
@@ -138,26 +143,14 @@
                     <div id="jwtHeaderSection">
                         <h4 class="text-sm font-semibold text-slate-700 mb-1">Header</h4>
                         <div class="bg-slate-50 border border-slate-200 p-3 mb-4">
-                            <pre id="jwtHeaderDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
+                            <pre id="jwtHeaderDisplay" class="text-xs"><code class="language-json"></code></pre>
                         </div>
                     </div>
 
                     <div id="jwtPayloadSection">
                         <h4 class="text-sm font-semibold text-slate-700 mb-1">Payload</h4>
-<!--                        <div class="bg-slate-50 border border-slate-200 p-3">-->
-<!--                            <div class="space-y-2 text-xs">-->
-<!--                                <div class="flex justify-between">-->
-<!--                                    <span class="font-medium text-slate-700">Status:</span>-->
-<!--                                    <span id="signatureStatus" class="text-green-600"></span>-->
-<!--                                </div>-->
-<!--                                <div class="flex justify-between">-->
-<!--                                    <span class="font-medium text-slate-700">Key ID:</span>-->
-<!--                                    <span id="keyId" class="text-slate-600 break-all text-right max-w-[60%]"></span>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                        </div>-->
                         <div class="bg-slate-50 border border-slate-200 p-3 mt-4">
-                            <pre id="jwtPayloadDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
+                            <pre id="jwtPayloadDisplay" class="text-xs"><code class="language-json"></code></pre>
                         </div>
                     </div>
                 </div>
@@ -168,14 +161,14 @@
                     <div id="idTokenHeaderSection">
                         <h4 class="text-sm font-semibold text-slate-700 mb-1">Header</h4>
                         <div class="bg-slate-50 border border-slate-200 p-3 mb-4">
-                            <pre id="idTokenHeaderDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
+                            <pre id="idTokenHeaderDisplay" class="text-xs"><code class="language-json"></code></pre>
                         </div>
                     </div>
 
                     <div id="idTokenPayloadSection">
                         <h4 class="text-sm font-semibold text-slate-700 mb-1">Payload</h4>
                         <div class="bg-slate-50 border border-slate-200 p-3">
-                            <pre id="idTokenPayloadDisplay" class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-all"></pre>
+                            <pre id="idTokenPayloadDisplay" class="text-xs"><code class="language-json"></code></pre>
                         </div>
                     </div>
                 </div>
@@ -222,6 +215,7 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="assets/js/utils.js"></script>
 <script src="assets/js/ui-service.js"></script>
 <script src="assets/js/storage-service.js"></script>
@@ -233,10 +227,54 @@
     const isM2MFlow = oauth2PlaygroundData.grantType === "client_credentials" || oauth2PlaygroundData.grantType === "password";
 
     if (isM2MFlow) {
-        $("#refreshAccessTokenBtn").hide();
         $("#logoutBtn").text("Revoke Token");
+        if (oauth2PlaygroundData.grantType === "client_credentials" && isM2MFlow) {
+            $("#refreshAccessTokenBtn").hide();
+        }
     }
 
+    function highlightJSON(jsonObj, elementSelector) {
+        const jsonString = JSON.stringify(jsonObj, null, 2);
+        $(elementSelector).text(jsonString);
+        hljs.highlightElement($(elementSelector)[0]);
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) {
+            return bytes + ' bytes';
+        } else {
+            return (bytes / 1024).toFixed(1) + ' KB';
+        }
+    }
+
+    function displayJWTWithColors(token, displayElementId, headerElementId) {
+        const parts = token.split('.');
+        if (parts.length !== 3) return;
+
+        const $display = $(`#${displayElementId}`);
+        $display.empty();
+
+        const header = $('<span>').text(parts[0]).addClass('text-yellow-600 break-all');
+        const dot1 = $('<span>').text('.').addClass('text-gray-300');
+        const payload = $('<span>').text(parts[1]).addClass('text-teal-600 break-all');
+        const dot2 = $('<span>').text('.').addClass('text-gray-300');
+        const signature = $('<span>').text(parts[2]).addClass('text-gray-500 break-all');
+
+        $display.append(header, dot1, payload, dot2, signature);
+        $display.removeClass('hidden');
+
+        if (headerElementId) {
+            const tokenSize = new Blob([token]).size;
+            const $header = $(`#${headerElementId} h3`);
+
+            // Remove existing size span if present
+            $header.find('.token-size').remove();
+
+            // Add new size span
+            const $sizeSpan = $('<span>').text(' (' + formatBytes(tokenSize) + ')').addClass('text-slate-500 font-normal text-xs ml-1 token-size');
+            $header.append($sizeSpan);
+        }
+    }
 
     function decodeJWT(token) {
         try {
@@ -292,12 +330,15 @@
                 $("#tokenType").text("Opaque");
                 $("#tokenScope").text(tokenResponse.scope || 'N/A');
             } else {
+                displayJWTWithColors(tokenResponse.access_token, 'accessTokenJWTDisplay', 'accessTokenHeader');
+                $accessTokenDisplay.addClass('hidden');
+
                 $("#accessTokenAnalysisSection").removeClass("hidden");
                 $("#opaqueTokenSection").addClass("hidden");
                 const accessTokenData = decodeJWT(tokenResponse.access_token);
                 if (accessTokenData) {
-                    $("#jwtHeaderDisplay").text(JSON.stringify(accessTokenData.header, null, 2));
-                    $("#jwtPayloadDisplay").text(JSON.stringify(accessTokenData.payload, null, 2));
+                    highlightJSON(accessTokenData.header, "#jwtHeaderDisplay code");
+                    highlightJSON(accessTokenData.payload, "#jwtPayloadDisplay code");
 
                     $("#tokenType").text(accessTokenData.header.typ || 'JWT');
                     $("#tokenAlgorithm").text(accessTokenData.header.alg || 'Unknown');
@@ -329,13 +370,16 @@
         const $idTokenDisplay = $("#idTokenDisplay");
         if (tokenResponse.id_token) {
             $idTokenDisplay.val(tokenResponse.id_token);
+            displayJWTWithColors(tokenResponse.id_token, 'idTokenJWTDisplay', 'idTokenHeader');
+            $idTokenDisplay.addClass('hidden');
+
             $("#idTokenSection").removeClass("hidden");
             $("#idTokenAnalysisSection").removeClass("hidden");
 
             const idTokenData = decodeJWT(tokenResponse.id_token);
             if (idTokenData) {
-                $("#idTokenHeaderDisplay").text(JSON.stringify(idTokenData.header, null, 2));
-                $("#idTokenPayloadDisplay").text(JSON.stringify(idTokenData.payload, null, 2));
+                highlightJSON(idTokenData.header, "#idTokenHeaderDisplay code");
+                highlightJSON(idTokenData.payload, "#idTokenPayloadDisplay code");
             }
         } else {
             $("#idTokenSection").addClass("hidden");
@@ -350,7 +394,6 @@
         initializeTokenData();
 
         const tokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
-
 
         $("#refreshAccessTokenBtn").click(function() {
             const cachedTokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
@@ -428,44 +471,60 @@
             window.location.href = "index.html";
         });
 
-        async function copyTokenToClipboard(element, tokenName) {
-            const tokenValue = $(element).val();
-            if (!tokenValue) {
+        async function copyTokenToClipboard(token, tokenName) {
+            if (!token) {
                 UIService.showNotification(`No ${tokenName} available to copy`, "warning");
                 return;
             }
 
             try {
-                element.select();
-                element.setSelectionRange(0, 99999);
-
                 if (navigator.clipboard && window.isSecureContext) {
-                    await navigator.clipboard.writeText(tokenValue);
+                    await navigator.clipboard.writeText(token);
+                    UIService.showNotification(`${tokenName} copied to clipboard`, "success");
                 } else {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = token;
+                    document.body.appendChild(textarea);
+                    textarea.select();
                     document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    UIService.showNotification(`${tokenName} copied to clipboard`, "success");
                 }
-
-                UIService.showNotification(`${tokenName} copied to clipboard`, "success");
             } catch (error) {
                 console.error('Failed to copy token:', error);
                 UIService.showNotification(`Failed to copy ${tokenName}`, "error");
             }
         }
 
-        $("#accessTokenDisplay").on('click', function() {
-            copyTokenToClipboard(this, "Access Token");
+        function selectElementText(element) {
+            const range = document.createRange();
+            const selection = window.getSelection();
+            range.selectNodeContents(element);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+
+        $("#accessTokenDisplay, #accessTokenJWTDisplay").on('click', function() {
+            if (this.id === 'accessTokenJWTDisplay') {
+                selectElementText(this);
+            }
+            copyTokenToClipboard(tokenResponse.access_token, "Access Token");
         });
 
-        $("#idTokenDisplay").on('click', function() {
-            copyTokenToClipboard(this, "ID Token");
+        $("#idTokenDisplay, #idTokenJWTDisplay").on('click', function() {
+            if (this.id === 'idTokenJWTDisplay') {
+                selectElementText(this);
+            }
+            copyTokenToClipboard(tokenResponse.id_token, "ID Token");
         });
 
         $("#refreshTokenDisplay").on('click', function() {
-            copyTokenToClipboard(this, "Refresh Token");
+            this.select();
+            this.setSelectionRange(0, 99999);
+            copyTokenToClipboard(tokenResponse.refresh_token, "Refresh Token");
         });
     });
 </script>
 
 </body>
 </html>
-

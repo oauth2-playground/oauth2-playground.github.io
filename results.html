@@ -230,6 +230,13 @@
 
 <script>
     const oauth2PlaygroundData = $.parseJSON(StorageService.getFromStorage() || '{}');
+    const isM2MFlow = oauth2PlaygroundData.grantType === "client_credentials" || oauth2PlaygroundData.grantType === "password";
+
+    if (isM2MFlow) {
+        $("#refreshAccessTokenBtn").hide();
+        $("#logoutBtn").text("Revoke Token");
+    }
+
 
     function decodeJWT(token) {
         try {
@@ -342,6 +349,9 @@
     $(document).ready(function() {
         initializeTokenData();
 
+        const tokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
+
+
         $("#refreshAccessTokenBtn").click(function() {
             const cachedTokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
 
@@ -374,7 +384,6 @@
         });
 
         $("#validateTokenBtn").click(function() {
-            const tokenResponse = JSON.parse(sessionStorage.getItem("token_response"));
             if (tokenResponse && tokenResponse.access_token) {
                 const tokenData = decodeJWT(tokenResponse.access_token);
                 if (tokenData) {
@@ -409,13 +418,50 @@
         $("#logoutBtn").click(function() {
             UIService.showModal(
                 "Are you sure you want to logout? This will clear all session data.",
-                () => OAuth2Service.logout()
+                () => !isM2MFlow ? OAuth2Service.logout() :
+                    OAuth2Service.revokeToken(tokenResponse.access_token).then(() => window.location.href = "index.html")
             );
         });
 
         $("#restartFlowBtn").click(function() {
             sessionStorage.clear();
             window.location.href = "index.html";
+        });
+
+        async function copyTokenToClipboard(element, tokenName) {
+            const tokenValue = $(element).val();
+            if (!tokenValue) {
+                UIService.showNotification(`No ${tokenName} available to copy`, "warning");
+                return;
+            }
+
+            try {
+                element.select();
+                element.setSelectionRange(0, 99999);
+
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(tokenValue);
+                } else {
+                    document.execCommand('copy');
+                }
+
+                UIService.showNotification(`${tokenName} copied to clipboard`, "success");
+            } catch (error) {
+                console.error('Failed to copy token:', error);
+                UIService.showNotification(`Failed to copy ${tokenName}`, "error");
+            }
+        }
+
+        $("#accessTokenDisplay").on('click', function() {
+            copyTokenToClipboard(this, "Access Token");
+        });
+
+        $("#idTokenDisplay").on('click', function() {
+            copyTokenToClipboard(this, "ID Token");
+        });
+
+        $("#refreshTokenDisplay").on('click', function() {
+            copyTokenToClipboard(this, "Refresh Token");
         });
     });
 </script>

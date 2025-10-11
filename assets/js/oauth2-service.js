@@ -176,28 +176,39 @@ const OAuth2Service = {
         const grantType = $('#grantType').val();
         const scope = $('#scope').val();
 
-        await Utils.delay(1000);
+        const isClientCredentials = grantType === 'client_credentials';
 
-        const mockToken = {
-            access_token: Utils.generateMockJWT(),
-            token_type: 'Bearer',
-            expires_in: 3600,
-            scope: scope || 'api:read api:write'
+        const payload = {
+            grant_type: isClientCredentials ? 'client_credentials' : 'password',
+            scope: scope
         };
 
-        if (grantType === 'password') {
-            mockToken.refresh_token = Utils.generateMockJWT();
-            mockToken.id_token = Utils.generateMockJWT();
+        if (!isClientCredentials) {
+            payload.username = $('#username').val();
+            payload.password = $('#password').val();
         }
 
-        this.tokens = mockToken;
-        this.displayTokenResponse(mockToken);
-        UIService.showNotification('Token obtained successfully!', 'success');
+        $.ajax({
+            url: $('#tokenUrl').val(),
+            method: 'POST',
+            data: $.param(payload),
+            contentType: 'application/x-www-form-urlencoded',
+            headers: {
+                'Authorization': 'Basic ' + btoa(`${$('#clientId').val()}:${$('#clientSecret').val()}`)
+            },
+            success: (response) => {
+                UIService.showNotification('Code Exchanged Successfully', 'success');
 
-        UIService.showButton('getUserInfoBtn');
-        if (mockToken.refresh_token) {
-            UIService.showButton('refreshTokenBtn');
-        }
+                sessionStorage.setItem('token_response', JSON.stringify(response));
+                window.location.href = 'results.html';
+            },
+            error: function(response) {
+                const errorMsg = response.responseJSON
+                    ? JSON.stringify(response.responseJSON)
+                    : response.responseText || 'Unknown error';
+                UIService.showNotification('Token request failed: ' + errorMsg, 'error');
+            },
+        });
     },
 
     async exchangeCode() {
@@ -325,6 +336,39 @@ const OAuth2Service = {
         sessionStorage.clear();
 
         window.location.href = `${oauth2PlaygroundData.logoutUrl}?${logoutParams.toString()}`;
+    },
+
+    async revokeToken(token, tokenTypeHint = 'access_token') {
+        const oauth2PlaygroundData = $.parseJSON(StorageService.getFromStorage() || '{}');
+
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: oauth2PlaygroundData.revocationUrl,
+                method: 'POST',
+                contentType: 'application/x-www-form-urlencoded',
+                headers: {
+                    'Authorization': 'Basic ' + btoa(`${oauth2PlaygroundData.clientId}:${oauth2PlaygroundData.clientSecret}`),
+                },
+                data: $.param({
+                    token: token,
+                    token_type_hint: tokenTypeHint
+                }),
+                success: () => {
+                    resolve({ ok: true });
+                },
+                error: function (xhr) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve({ ok: true });
+                        return;
+                    }
+                    console.error('Token revocation error:', xhr);
+                    const errorMsg = xhr.responseJSON
+                        ? JSON.stringify(xhr.responseJSON)
+                        : xhr.responseText || `Status: ${xhr.status} - ${xhr.statusText}`;
+                    reject(new Error(errorMsg));
+                }
+            });
+        });
     },
 
     async refreshToken(token, isPkce = false) {
